@@ -151,16 +151,53 @@
 </div>
 
 <script>
-const card=document.getElementById('guruCard');
-const back=document.getElementById('guruBackdrop');
-const elNama = document.getElementById('gNama');
-const elUsername = document.getElementById('gUsername');
-const elAlamat = document.getElementById('gAlamat');
-const elHp = document.getElementById('gHp');
-const elFoto = document.getElementById('gFoto');
+function ensureGuruPopupElements() {
+  let back = document.getElementById('guruBackdrop');
+  let card = document.getElementById('guruCard');
+
+  if (!back) {
+    back = document.createElement('div');
+    back.id = 'guruBackdrop';
+    back.addEventListener('click', closeGuru);
+    document.body.appendChild(back);
+  }
+
+  if (!card) {
+    card = document.createElement('div');
+    card.id = 'guruCard';
+    card.className = 'card shadow';
+    card.innerHTML = `
+      <div class="card-body text-center">
+        <img id="gFoto" class="img-circle mb-3" width="90" height="90" style="object-fit:cover">
+        <h5 id="gNama" class="mb-1"></h5>
+        <div class="text-muted mb-2" id="gUsername"></div>
+        <hr>
+        <div class="text-left">
+          <p><b>Alamat:</b><br><span id="gAlamat">-</span></p>
+          <p><b>No WhatsApp:</b><br><span id="gHp">-</span></p>
+        </div>
+        <button class="btn btn-secondary btn-block" type="button" id="btnCloseGuru">Tutup</button>
+      </div>
+    `;
+    document.body.appendChild(card);
+    const btnClose = card.querySelector('#btnCloseGuru');
+    if (btnClose) btnClose.addEventListener('click', closeGuru);
+  }
+
+  return {
+    back,
+    card,
+    elNama: document.getElementById('gNama'),
+    elUsername: document.getElementById('gUsername'),
+    elAlamat: document.getElementById('gAlamat'),
+    elHp: document.getElementById('gHp'),
+    elFoto: document.getElementById('gFoto')
+  };
+}
 
 /* OPEN PREVIEW */
 function openGuru(id){
+const popup = ensureGuruPopupElements();
 fetch(`<?= base_url($prefixGuru . '/detail') ?>/${id}`,{
  headers:{'X-Requested-With':'XMLHttpRequest'}
 })
@@ -171,33 +208,35 @@ fetch(`<?= base_url($prefixGuru . '/detail') ?>/${id}`,{
  }
  const g=res.data;
 
- elNama.innerText =
+ popup.elNama.innerText =
    (g.nama_depan||'')+' '+(g.nama_belakang||'');
 
- elUsername.innerText = '@'+g.username;
- elAlamat.innerText   = g.alamat || '-';
- elHp.innerText       = g.no_hp || '-';
+ popup.elUsername.innerText = '@'+g.username;
+ popup.elAlamat.innerText   = g.alamat || '-';
+ popup.elHp.innerText       = g.no_hp || '-';
 
  const fotoBase = '<?= rtrim(base_url('uploads/guru'), '/') ?>';
- const defaultFoto = '<?= base_url('uploads/guru/default.png') ?>';
- elFoto.src = g.foto
+ const defaultFoto = '<?= base_url('assets/adminlte/img/avatar.png') ?>';
+ popup.elFoto.src = g.foto
    ? `${fotoBase}/${g.foto}`
    : defaultFoto;
- elFoto.onerror = function () {
+ popup.elFoto.onerror = function () {
    this.onerror = null;
    this.src = defaultFoto;
  };
 
- back.classList.add('show');
- card.classList.add('show');
+ popup.back.classList.add('show');
+ popup.card.classList.add('show');
 }).catch(() => {
  alert('Gagal memuat detail guru.');
 });
 }
 
 function closeGuru(){
- back.classList.remove('show');
- card.classList.remove('show');
+ const back = document.getElementById('guruBackdrop');
+ const card = document.getElementById('guruCard');
+ if (back) back.classList.remove('show');
+ if (card) card.classList.remove('show');
 }
 
 /* TOGGLE STATUS – TANPA RELOAD */
