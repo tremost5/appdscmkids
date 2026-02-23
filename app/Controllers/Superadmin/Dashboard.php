@@ -79,6 +79,14 @@ class Dashboard extends BaseController
             ->get()
             ->getResultArray();
 
+        // ===== MAINTENANCE STATUS =====
+        $maintenanceRow = $db->table('system_settings')
+            ->where('setting_key', 'maintenance_mode')
+            ->get()
+            ->getRowArray();
+        $maintenanceValue = (string) ($maintenanceRow['value'] ?? ($maintenanceRow['setting_value'] ?? '0'));
+        $maintenanceActive = $maintenanceValue === '1';
+
         logSuperadmin('view_dashboard', 'Superadmin membuka dashboard');
 
         return view('superadmin/dashboard', [
@@ -92,6 +100,7 @@ class Dashboard extends BaseController
             'roleLabels'     => ['Superadmin', 'Admin', 'Guru'],
             'roleData'       => [$roleMap[1], $roleMap[2], $roleMap[3]],
             'activity'       => $activity,
+            'maintenanceActive' => $maintenanceActive,
         ]);
     }
 
@@ -130,31 +139,39 @@ class Dashboard extends BaseController
         }
 
         if ($type === 'maintenance') {
-            $exists = $db->table('system_settings')
+            $row = $db->table('system_settings')
                 ->where('setting_key', 'maintenance_mode')
-                ->countAllResults() > 0;
+                ->get()
+                ->getRowArray();
 
-            if ($exists) {
+            $current = (string) ($row['value'] ?? ($row['setting_value'] ?? '0'));
+            $next = $current === '1' ? 0 : 1;
+
+            if ($row) {
                 $db->table('system_settings')
                     ->where('setting_key', 'maintenance_mode')
-                    ->update(['value' => 1]);
+                    ->update([
+                        'value' => $next,
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
             } else {
                 $db->table('system_settings')->insert([
                     'setting_key'  => 'maintenance_mode',
-                    'value'        => 1,
+                    'value'        => $next,
                     'description'  => 'Maintenance mode',
                     'updated_at'   => date('Y-m-d H:i:s'),
                 ]);
             }
 
             logSuperadmin(
-                'maintenance_on',
-                'Maintenance mode diaktifkan'
+                $next === 1 ? 'maintenance_on' : 'maintenance_off',
+                $next === 1 ? 'Maintenance mode diaktifkan' : 'Maintenance mode dinonaktifkan'
             );
 
             return $this->response->setJSON([
                 'status'  => 'success',
-                'message' => 'Maintenance mode aktif',
+                'message' => $next === 1 ? 'Maintenance mode aktif' : 'Maintenance mode nonaktif',
+                'maintenance_active' => $next === 1,
                 'csrf'    => [
                     'name' => csrf_token(),
                     'hash' => csrf_hash(),

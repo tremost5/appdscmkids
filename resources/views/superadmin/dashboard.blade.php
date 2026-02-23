@@ -161,8 +161,10 @@
           <button class="btn btn-danger emergency-btn" onclick="doAction('logout-all')">
             Force Logout Semua User
           </button>
-          <button class="btn btn-warning emergency-btn" onclick="doAction('maintenance')">
-            Aktifkan Maintenance
+          <button id="btnMaintenanceToggle"
+                  class="btn <?= !empty($maintenanceActive) ? 'btn-secondary' : 'btn-warning' ?> emergency-btn"
+                  onclick="doAction('maintenance')">
+            <?= !empty($maintenanceActive) ? 'Nonaktifkan Maintenance' : 'Aktifkan Maintenance' ?>
           </button>
         </div>
       </div>
@@ -176,6 +178,7 @@ const superWeeklyLabels = @json($weeklyLabels ?? []);
 const superWeeklyData = @json($weeklyData ?? []);
 const roleLabels = @json($roleLabels ?? []);
 const roleData = @json($roleData ?? []);
+let maintenanceActive = @json(!empty($maintenanceActive));
 const gridColor = { color: 'rgba(148,163,184,.25)', drawTicks: false };
 
 new Chart(document.getElementById('chartSuperWeekly'), {
@@ -227,6 +230,17 @@ new Chart(document.getElementById('chartRole'), {
 });
 
 const csrfToken = '<?= csrf_token() ?>';
+const btnMaintenanceToggle = document.getElementById('btnMaintenanceToggle');
+
+function syncMaintenanceButton() {
+  if (!btnMaintenanceToggle) return;
+  btnMaintenanceToggle.textContent = maintenanceActive
+    ? 'Nonaktifkan Maintenance'
+    : 'Aktifkan Maintenance';
+  btnMaintenanceToggle.classList.toggle('btn-secondary', maintenanceActive);
+  btnMaintenanceToggle.classList.toggle('btn-warning', !maintenanceActive);
+}
+syncMaintenanceButton();
 
 function doAction(type) {
   if (!confirm('Yakin melakukan aksi ini?')) return;
@@ -245,8 +259,16 @@ function doAction(type) {
   })
   .then(r => r.json())
   .then(r => {
+    if (typeof r.maintenance_active === 'boolean') {
+      maintenanceActive = r.maintenance_active;
+      syncMaintenanceButton();
+    }
+
     if (r.status === 'success') {
       toastr.success(r.message || 'Berhasil');
+      if (type === 'maintenance') {
+        return;
+      }
       setTimeout(() => location.reload(), 1200);
       return;
     }
