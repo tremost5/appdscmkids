@@ -128,9 +128,11 @@ class Absensi extends Controller
                 'status'     => $status,
                 'tanggal'    => $tanggal
             ]);
+            $absensiDetailId = (int) $this->db->insertID();
 
             // LOG
             $this->db->table('absensi_log')->insert([
+                'absensi_detail_id' => $absensiDetailId,
                 'aksi'        => 'create',
                 'status_baru' => $status,
                 'oleh'        => 'guru',
