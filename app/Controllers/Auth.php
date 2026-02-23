@@ -58,13 +58,15 @@ class Auth extends BaseController
         // REGENERATE SESSION
         // ==========================
         session()->regenerate(true);
+        $sessionToken = bin2hex(random_bytes(32));
 
         // ==========================
         // UPDATE LOGIN INFO
         // ==========================
         $model->update($user['id'], [
             'last_login' => date('Y-m-d H:i:s'),
-            'last_seen'  => date('Y-m-d H:i:s')
+            'last_seen'  => date('Y-m-d H:i:s'),
+            'session_token' => $sessionToken,
         ]);
 
         // ===== SET SESSION LOGIN =====
@@ -77,7 +79,8 @@ session()->set([
     'kelas_id'      => $user['kelas_id'] ?? null,
     'foto'          => $user['foto'] ?? 'default.png',
     'isLoggedIn'    => true,
-    'last_login'    => $user['last_login']
+    'last_login'    => $user['last_login'],
+    'session_token' => $sessionToken,
 
 ]);
 
@@ -112,11 +115,17 @@ session()->set([
     public function logout()
     {
         helper('audit');
+        $userId = (int) session()->get('user_id');
+
         if (session()->get('user_id')) {
             logAudit('logout', 'info', [
-                'user_id' => (int) session()->get('user_id'),
+                'user_id' => $userId,
                 'new' => ['keterangan' => 'User logout'],
             ]);
+        }
+
+        if ($userId > 0) {
+            (new UserModel())->update($userId, ['session_token' => null]);
         }
 
         session()->destroy();
