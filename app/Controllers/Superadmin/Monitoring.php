@@ -18,10 +18,10 @@ class Monitoring extends BaseController
     public function index()
     {
         $tahunAjaranId = tahunAjaranIdAktif();
-
-if (!$tahunAjaranId) {
-    return redirect()->back()->with('error','Tahun ajaran aktif tidak ditemukan');
-}
+        $warning = null;
+        if (!$tahunAjaranId) {
+            $warning = 'Tahun ajaran aktif tidak ditemukan. Total absensi guru ditampilkan sebagai 0.';
+        }
 
 
         // ADMIN (role 2)
@@ -39,24 +39,36 @@ if (!$tahunAjaranId) {
             ->getResultArray();
 
         // GURU (role 3) + statistik absensi
-        $guru = $this->db->table('users u')
-            ->select('
+        $guruBuilder = $this->db->table('users u')
+            ->where('u.role_id', 3)
+            ->orderBy('u.nama_depan', 'ASC');
+
+        if ($tahunAjaranId) {
+            $guruBuilder
+                ->select('
+                    u.id,
+                    u.nama_depan,
+                    u.nama_belakang,
+                    u.last_seen,
+                    COUNT(a.id) AS total_absen
+                ')
+                ->join(
+                    'absensi a',
+                    'a.guru_id = u.id AND a.tahun_ajaran_id = ' . (int) $tahunAjaranId,
+                    'left'
+                )
+                ->groupBy(['u.id', 'u.nama_depan', 'u.nama_belakang', 'u.last_seen']);
+        } else {
+            $guruBuilder->select('
                 u.id,
                 u.nama_depan,
                 u.nama_belakang,
                 u.last_seen,
-                COUNT(a.id) AS total_absen
-            ')
-            ->join(
-                'absensi a',
-                'a.guru_id = u.id AND a.tahun_ajaran_id = ' . (int) $tahunAjaranId,
-                'left'
-            )
-            ->where('u.role_id', 3)
-            ->groupBy('u.id')
-            ->orderBy('u.nama_depan', 'ASC')
-            ->get()
-            ->getResultArray();
+                0 AS total_absen
+            ');
+        }
+
+        $guru = $guruBuilder->get()->getResultArray();
 
         foreach ($guru as &$g) {
             $lastSeen = $g['last_seen'] ?? null;
@@ -67,7 +79,8 @@ if (!$tahunAjaranId) {
 
         return view('superadmin/monitoring/index', [
             'admin' => $admin,
-            'guru'  => $guru
+            'guru'  => $guru,
+            'warning' => $warning,
         ]);
     }
 }
