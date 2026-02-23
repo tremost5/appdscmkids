@@ -38,6 +38,7 @@
 <link rel="manifest" href="<?= base_url('pwa/manifest.json') ?>">
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Presensi DSCM">
 <link rel="apple-touch-icon" href="<?= base_url('pwa/icons/icon-192.png') ?>">
@@ -258,7 +259,7 @@ if ($role == 2) { // ADMIN
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swUrl = '<?= base_url('pwa/sw.js') ?>';
-    const swScope = '<?= rtrim(base_url('/'), '/') . '/' ?>';
+    const swScope = '<?= rtrim(base_url('pwa'), '/') . '/' ?>';
     navigator.serviceWorker.register(
       swUrl,
       { scope: swScope }

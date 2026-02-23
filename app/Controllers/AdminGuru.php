@@ -300,24 +300,32 @@ class AdminGuru extends BaseController
         }
 
         $startToday = date('Y-m-d 00:00:00');
+        $fields = array_map('strtolower', $this->db->getFieldNames('users'));
+        $hasCreatedAt = in_array('created_at', $fields, true);
 
         $nonaktif = (int) $this->db->table('users')
             ->where('role_id', 3)
             ->where('status', 'nonaktif')
             ->countAllResults();
 
-        $baruHariIni = (int) $this->db->table('users')
-            ->where('role_id', 3)
-            ->where('created_at >=', $startToday)
-            ->countAllResults();
+        $baruHariIni = 0;
+        if ($hasCreatedAt) {
+            $baruHariIni = (int) $this->db->table('users')
+                ->where('role_id', 3)
+                ->where('created_at >=', $startToday)
+                ->countAllResults();
+        }
 
-        $totalAlert = (int) $this->db->table('users')
-            ->where('role_id', 3)
-            ->groupStart()
-                ->where('status', 'nonaktif')
-                ->orWhere('created_at >=', $startToday)
-            ->groupEnd()
-            ->countAllResults();
+        $totalAlert = $nonaktif;
+        if ($hasCreatedAt) {
+            $totalAlert = (int) $this->db->table('users')
+                ->where('role_id', 3)
+                ->groupStart()
+                    ->where('status', 'nonaktif')
+                    ->orWhere('created_at >=', $startToday)
+                ->groupEnd()
+                ->countAllResults();
+        }
 
         return $this->response->setJSON([
             'nonaktif' => $nonaktif,
