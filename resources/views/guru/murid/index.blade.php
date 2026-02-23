@@ -114,9 +114,9 @@
 <div id="muridModal"
      style="display:none;position:fixed;inset:0;
             background:rgba(0,0,0,.6);
-            z-index:1200;
+            z-index:20000;
             align-items:center;justify-content:center"
-     onclick="this.style.display='none'">
+     onclick="closeMuridModal()">
 
   <div onclick="event.stopPropagation()"
        style="background:#fff;border-radius:18px;
@@ -158,6 +158,28 @@
 </div>
 
 <script>
+function getMuridModal(){
+  const modal = document.getElementById('muridModal');
+  if (modal && modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+  return modal;
+}
+
+function openMuridModal() {
+  const modal = getMuridModal();
+  if (!modal) return;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMuridModal() {
+  const modal = document.getElementById('muridModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
 function applyFilter(){
   const q=document.getElementById('searchMurid').value.toLowerCase();
   const k=document.getElementById('filterKelas').value;
@@ -199,7 +221,7 @@ document.querySelectorAll('.murid-detail').forEach(el=>{
       window.open(`https://wa.me/${hp}`);
     };
 
-    document.getElementById('muridModal').style.display='flex';
+    openMuridModal();
   };
 });
 </script>

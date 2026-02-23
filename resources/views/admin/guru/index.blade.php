@@ -10,7 +10,7 @@
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.35);
-  z-index:1049;
+  z-index:20000;
   opacity:0;
   pointer-events:none;
   transition:.2s;
@@ -25,7 +25,7 @@
   top:50%;
   left:50%;
   transform:translate(-50%,-45%) scale(.95);
-  z-index:1050;
+  z-index:20001;
   width:92%;
   max-width:420px;
   opacity:0;
@@ -198,6 +198,15 @@ function ensureGuruPopupElements() {
     if (btnClose) btnClose.addEventListener('click', closeGuru);
   }
 
+  // Always move popup nodes to <body> so fixed positioning follows viewport
+  // and is not affected by transformed/scrolled parent containers.
+  if (back.parentElement !== document.body) {
+    document.body.appendChild(back);
+  }
+  if (card.parentElement !== document.body) {
+    document.body.appendChild(card);
+  }
+
   return {
     back,
     card,
@@ -300,6 +309,7 @@ fetch(`<?= base_url($prefixGuru . '/detail') ?>/${id}`,{
 
  popup.back.classList.add('show');
  popup.card.classList.add('show');
+ document.body.style.overflow = 'hidden';
 }).catch(() => {
  alert('Gagal memuat detail guru.');
 });
@@ -310,6 +320,7 @@ function closeGuru(){
  const card = document.getElementById('guruCard');
  if (back) back.classList.remove('show');
  if (card) card.classList.remove('show');
+ document.body.style.overflow = '';
 }
 
 /* TOGGLE STATUS – TANPA RELOAD */
