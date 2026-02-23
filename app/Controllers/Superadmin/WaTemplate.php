@@ -3,7 +3,6 @@
 namespace App\Controllers\Superadmin;
 
 use App\Controllers\BaseController;
-use App\Models\UserModel;
 use Config\Database;
 
 class WaTemplate extends BaseController
@@ -26,13 +25,13 @@ class WaTemplate extends BaseController
             $templates[$key] = waTemplateGet($key, $value);
         }
 
-        $users = (new UserModel())
+        $users = $this->db->table('users')
             ->select('id, role_id, nama_depan, nama_belakang, no_hp, status')
-            ->where('role_id', 1)
-            ->orWhere('role_id', 2)
+            ->whereIn('role_id', [1, 2])
             ->orderBy('role_id', 'ASC')
             ->orderBy('nama_depan', 'ASC')
-            ->findAll();
+            ->get()
+            ->getResultArray();
 
         $recipientRows = $this->db->table('wa_recipients')
             ->select('user_id, is_active')
