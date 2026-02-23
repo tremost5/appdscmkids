@@ -52,7 +52,7 @@ class AdminFotoKegiatan extends BaseController
             ->join('users u', 'u.id = a.guru_id', 'left')
             ->where('a.selfie_foto IS NOT NULL', null, false)
             ->where('a.tanggal', $tanggal)
-            ->groupBy('a.id, a.tanggal, a.jam, a.selfie_foto');
+            ->groupBy(['a.id', 'a.tanggal', 'a.jam', 'a.selfie_foto']);
 
         if ($kelas) {
             $builder->where('m.kelas_id', $kelas);
