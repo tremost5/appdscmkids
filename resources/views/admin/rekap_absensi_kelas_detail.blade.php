@@ -16,7 +16,7 @@ $mapLokasi = [
 <section class="content-header">
   <div class="container-fluid">
     <h1>
-      Rekap Absensi Kelas <?= esc($mapKelas[$kelas] ?? '-') ?>
+      Rekap Presensi Kelas <?= esc($mapKelas[$kelas] ?? '-') ?>
     </h1>
     <p class="text-muted">
       Periode <?= esc($start) ?> s/d <?= esc($end) ?>
@@ -68,7 +68,7 @@ $mapLokasi = [
 
 <?php if (empty($rows)): ?>
   <div class="text-center text-muted py-4">
-    Tidak ada data absensi
+    Tidak ada data presensi
   </div>
 <?php endif; ?>
 

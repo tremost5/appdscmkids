@@ -13,7 +13,7 @@ $kelasAktif = $kelas ?? '';
 
 <section class="content-header">
   <div class="container-fluid">
-    <h1>Rekap Absensi Per Kelas</h1>
+    <h1>Rekap Presensi Per Kelas</h1>
     <p class="text-muted">
       Periode
       <?= esc($start ?? '-') ?> s/d <?= esc($end ?? '-') ?>
@@ -84,7 +84,7 @@ $kelasAktif = $kelas ?? '';
 <!-- ================= HASIL ================= -->
 <?php if (empty($rows)): ?>
   <div class="text-center text-muted py-4">
-    Tidak ada data absensi
+    Tidak ada data presensi
   </div>
 <?php endif; ?>
 

@@ -151,7 +151,7 @@ if ($canAdminGuru) {
         <a href="#" class="nav-link <?= $isAbsensi ? 'active' : '' ?> <?= $dobelUnresolvedCount > 0 ? 'absensi-warning absensi-shake' : '' ?>" id="menuAbsensi">
             <i class="nav-icon fas fa-clipboard-check"></i>
             <p>
-                Absensi
+                Presensi
                 <i class="right fas fa-angle-left"></i>
                 <!-- BADGE GLOBAL -->
                 <span id="badgeAbsensiGlobal"
@@ -168,7 +168,7 @@ if ($canAdminGuru) {
                    id="menuDobel">
                     <i class="nav-icon fas fa-exclamation-triangle"></i>
                     <p>
-                        Absensi Dobel
+                        Presensi Dobel
                         <span class="badge badge-danger ml-2 <?= $dobelUnresolvedCount > 0 ? '' : 'd-none' ?>"
                               id="badgeDobel"><?= $dobelUnresolvedCount ?></span>
                     </p>
@@ -180,7 +180,7 @@ if ($canAdminGuru) {
                 <a href="<?= base_url('admin/rekap-absensi') ?>"
                    class="nav-link <?= str_contains(uri_string(), 'rekap-absensi') ? 'active' : '' ?>">
                     <i class="far fa-circle nav-icon"></i>
-                    <p>Rekap Absensi</p>
+                    <p>Rekap Presensi</p>
                 </a>
             </li>
 

@@ -30,8 +30,8 @@
   $labelMap = [
       'dashboard' => 'Dashboard',
       'guru' => 'Guru',
-      'absensi' => 'Absensi',
-      'absensi-hari-ini' => 'Absensi Hari Ini',
+      'absensi' => 'Presensi',
+      'absensi-hari-ini' => 'Presensi Hari Ini',
       'murid' => 'Murid',
       'materi' => 'Materi',
       'kegiatan' => 'Kegiatan',

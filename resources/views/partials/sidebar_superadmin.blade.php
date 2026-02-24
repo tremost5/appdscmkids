@@ -71,7 +71,7 @@ ABSENSI
   <a href="<?= base_url('dashboard/superadmin/rekap-absensi') ?>"
      class="nav-link <?= str_contains(uri_string(),'superadmin/rekap-absensi')?'active':'' ?>">
     <i class="nav-icon fas fa-clipboard-list"></i>
-    <p>Rekap Absensi</p>
+    <p>Rekap Presensi</p>
   </a>
 </li>
 
@@ -79,7 +79,7 @@ ABSENSI
   <a href="<?= base_url('dashboard/superadmin/statistik-absensi') ?>"
      class="nav-link <?= str_contains(uri_string(),'superadmin/statistik-absensi')?'active':'' ?>">
     <i class="nav-icon fas fa-chart-bar"></i>
-    <p>Statistik Absensi</p>
+    <p>Statistik Presensi</p>
   </a>
 </li>
 
@@ -87,7 +87,7 @@ ABSENSI
   <a href="<?= base_url('dashboard/superadmin/absensi-dobel') ?>"
      class="nav-link <?= str_contains(uri_string(),'superadmin/absensi-dobel')?'active':'' ?>">
     <i class="nav-icon fas fa-exclamation-triangle"></i>
-    <p>Absensi Dobel</p>
+    <p>Presensi Dobel</p>
   </a>
 </li>
 

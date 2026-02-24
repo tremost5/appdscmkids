@@ -113,11 +113,11 @@
         <div class="value"><?= (int) ($total_murid ?? 0) ?></div>
       </div>
       <div class="kpi-card">
-        <div class="label">Absensi Hari Ini</div>
+        <div class="label">Presensi Hari Ini</div>
         <div class="value"><?= (int) ($absen_hari_ini ?? 0) ?></div>
       </div>
       <div class="kpi-card">
-        <div class="label">Absensi Dobel</div>
+        <div class="label">Presensi Dobel</div>
         <div class="value"><?= (int) ($absen_dobel ?? 0) ?></div>
       </div>
     </div>

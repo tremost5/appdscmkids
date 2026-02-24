@@ -64,7 +64,7 @@
           <th>Nama</th>
           <th>Last Seen</th>
           <th>Status</th>
-          <th>Total Absensi</th>
+          <th>Total Presensi</th>
         </tr>
       </thead>
       <tbody>

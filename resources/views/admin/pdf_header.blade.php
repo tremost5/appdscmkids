@@ -12,7 +12,7 @@ $logoPath = FCPATH . 'assets/logo/dscmkids.png';
 
     <td width="85%" align="center">
       <div style="font-size:16px; font-weight:bold;">
-        ABSENSI KEHADIRAN MURID
+        PRESENSI KEHADIRAN MURID
       </div>
       <div style="font-size:14px; font-weight:bold;">
         DSCM KIDS

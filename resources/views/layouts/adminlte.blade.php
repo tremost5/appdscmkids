@@ -83,15 +83,15 @@ if ($role == 2) { // ADMIN
       'guru' => 'Guru',
       'murid' => 'Murid',
       'profil' => 'Profil',
-      'rekap-absensi' => 'Rekap Absensi',
+      'rekap-absensi' => 'Rekap Presensi',
       'statistik' => 'Statistik',
-      'statistik-absensi' => 'Statistik Absensi',
+      'statistik-absensi' => 'Statistik Presensi',
       'bahan-ajar' => 'Bahan Ajar',
       'materi' => 'Materi',
       'kegiatan' => 'Kegiatan',
-      'absensi' => 'Absensi',
-      'absensi-hari-ini' => 'Absensi Hari Ini',
-      'absensi-dobel' => 'Absensi Dobel',
+      'absensi' => 'Presensi',
+      'absensi-hari-ini' => 'Presensi Hari Ini',
+      'absensi-dobel' => 'Presensi Dobel',
       'naik-kelas' => 'Naik Kelas',
       'audit-log' => 'Audit Log',
       'ranking-murid' => 'Ranking Murid',
@@ -153,7 +153,7 @@ if ($role == 2) { // ADMIN
 <!-- SIDEBAR -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
   <a href="<?= base_url($dashboardUrl) ?>" class="brand-link text-center">
-    <span class="brand-text font-weight-bold">ABSENSI DSCM</span>
+    <span class="brand-text font-weight-bold">PRESENSI DSCM</span>
   </a>
 
   <div class="sidebar">
@@ -205,7 +205,7 @@ if ($role == 2) { // ADMIN
     <i class="fas fa-chalkboard-teacher"></i><span>Guru</span>
   </a>
   <a href="<?= base_url('dashboard/superadmin/rekap-absensi') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'superadmin/rekap-absensi') ? 'active' : '' ?>">
-    <i class="fas fa-clipboard-list"></i><span>Absensi</span>
+    <i class="fas fa-clipboard-list"></i><span>Presensi</span>
   </a>
   <a href="<?= base_url('dashboard/superadmin/profil') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'superadmin/profil') ? 'active' : '' ?>">
     <i class="fas fa-user-cog"></i><span>Profil</span>
@@ -220,7 +220,7 @@ if ($role == 2) { // ADMIN
     <i class="fas fa-users"></i><span>Guru</span>
   </a>
   <a href="<?= base_url('admin/rekap-absensi') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'admin/rekap-absensi') ? 'active' : '' ?>">
-    <i class="fas fa-clipboard-check"></i><span>Absensi</span>
+    <i class="fas fa-clipboard-check"></i><span>Presensi</span>
   </a>
   <a href="<?= base_url('admin/profil') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'admin/profil') ? 'active' : '' ?>">
     <i class="fas fa-user"></i><span>Profil</span>
@@ -232,7 +232,7 @@ if ($role == 2) { // ADMIN
     <i class="fas fa-home"></i><span>Home</span>
   </a>
   <a href="<?= base_url('guru/absensi') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'guru/absensi') ? 'active' : '' ?>">
-    <i class="fas fa-clipboard-check"></i><span>Absen</span>
+    <i class="fas fa-clipboard-check"></i><span>Presensi</span>
   </a>
   <a href="<?= base_url('guru/murid') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'guru/murid') ? 'active' : '' ?>">
     <i class="fas fa-user-graduate"></i><span>Murid</span>

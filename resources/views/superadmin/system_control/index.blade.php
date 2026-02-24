@@ -18,7 +18,7 @@
 
 <hr>
 
-<h5>Absensi Lock</h5>
+<h5>Presensi Lock</h5>
 <?php if($absensi_lock): ?>
 <span class="badge badge-danger">LOCKED</span>
 <?php else: ?>
@@ -26,7 +26,7 @@
 <?php endif ?>
 <br><br>
 <a href="<?= base_url('superadmin/system-control/toggle-absensi') ?>"
-   class="btn btn-danger">Toggle Absensi</a>
+   class="btn btn-danger">Toggle Presensi</a>
 
 </div>
 </div>

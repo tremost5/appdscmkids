@@ -1,7 +1,7 @@
-﻿@extends('layouts/adminlte')
+@extends('layouts/adminlte')
 @section('content')
 
-<h3 class="mb-3 text-danger">Absensi Dobel</h3>
+<h3 class="mb-3 text-danger">Presensi Dobel</h3>
 
 <form method="get" class="mb-3">
   <label>Tanggal (Opsional):</label>
@@ -107,7 +107,7 @@ document.addEventListener('click', function(e){
   })
   .then((res) => {
     if (!res || res.status !== 'ok') {
-      alert((res && res.message) ? res.message : 'Gagal resolve absensi');
+      alert((res && res.message) ? res.message : 'Gagal resolve presensi');
       return;
     }
 
@@ -121,7 +121,7 @@ document.addEventListener('click', function(e){
     setTimeout(() => card.remove(), 300);
   })
   .catch((err) => {
-    alert(err.message || 'Gagal resolve absensi');
+    alert(err.message || 'Gagal resolve presensi');
   });
 });
 </script>

@@ -37,7 +37,7 @@
 <section class="content-header">
   <div class="container-fluid">
     <h1>Foto Kegiatan</h1>
-    <p class="text-muted">Dokumentasi selfie absensi per kelas</p>
+    <p class="text-muted">Dokumentasi selfie presensi per kelas</p>
   </div>
 </section>
 

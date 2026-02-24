@@ -3,7 +3,7 @@
 
 <section class="content-header">
   <div class="container-fluid">
-    <h4>Detail Absensi <?= esc($tanggal) ?></h4>
+    <h4>Detail Presensi <?= esc($tanggal) ?></h4>
   </div>
 </section>
 
@@ -17,7 +17,7 @@
 
   <?php if (!empty($summary['total_dobel']) && $summary['total_dobel'] > 0): ?>
     <span class="badge badge-danger">
-      🔴 <?= (int)$summary['total_dobel'] ?> absensi dobel
+      🔴 <?= (int)$summary['total_dobel'] ?> presensi dobel
     </span>
   <?php endif; ?>
 </div>

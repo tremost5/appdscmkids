@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title><?= esc($judul ?? 'Rekap Absensi') ?></title>
+<title><?= esc($judul ?? 'Rekap Presensi') ?></title>
 
 <style>
 body {
@@ -77,7 +77,7 @@ table.data th {
 </td>
 
     <td width="85%" class="header-title">
-        <h2><?= esc($judul ?? 'REKAP ABSENSI') ?></h2>
+        <h2><?= esc($judul ?? 'REKAP PRESENSI') ?></h2>
         <p>Periode: <?= esc($start ?? '-') ?> s/d <?= esc($end ?? '-') ?></p>
     </td>
 </tr>

@@ -1,7 +1,7 @@
 @extends('layouts/adminlte')
 @section('content')
 
-<h1>Statistik Absensi</h1>
+<h1>Statistik Presensi</h1>
 
 <table class="table table-bordered">
 <thead>

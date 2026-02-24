@@ -67,7 +67,7 @@ function lokasiLabel($id, $map) {
 
 <section class="content-header">
   <div class="container-fluid">
-    <h1>Rekap Absensi</h1>
+    <h1>Rekap Presensi</h1>
     <p class="text-muted">Data kehadiran siswa</p>
   </div>
 </section>
@@ -125,7 +125,7 @@ function lokasiLabel($id, $map) {
 
 <?php if (empty($grouped)): ?>
   <div class="text-center text-muted py-4">
-    Tidak ada data absensi
+    Tidak ada data presensi
   </div>
 <?php endif; ?>
 

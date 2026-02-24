@@ -53,7 +53,7 @@
 <?php if (empty($rows)): ?>
 <tr>
   <td colspan="4" class="text-center text-muted">
-    Belum ada data absensi
+    Belum ada data presensi
   </td>
 </tr>
 <?php endif; ?>

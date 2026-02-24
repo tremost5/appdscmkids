@@ -98,12 +98,12 @@
   <div class="admin-shell">
     <div class="admin-hero">
       <h3>Dashboard Admin</h3>
-      <small>Kontrol aktivitas guru, absensi, dan monitoring operasional harian.</small>
+      <small>Kontrol aktivitas guru, presensi, dan monitoring operasional harian.</small>
     </div>
 
     <div id="alert-absensi-dobel" class="alert alert-danger mb-0 <?= (int) ($dobelHariIni ?? 0) > 0 ? '' : 'd-none' ?>">
-      <strong>Absensi dobel terdeteksi.</strong>
-      Segera cek menu Absensi Dobel untuk penanganan.
+      <strong>Presensi dobel terdeteksi.</strong>
+      Segera cek menu Presensi Dobel untuk penanganan.
       <a href="<?= base_url('admin/absensi-dobel') ?>" class="btn btn-sm btn-light ml-2">Buka</a>
     </div>
 
@@ -163,7 +163,7 @@
             <div class="chart-sub"><?= (int) ($guru_offline ?? 0) ?> guru</div>
           </div>
           <div class="list-item">
-            <strong>Absensi Dobel Hari Ini</strong>
+            <strong>Presensi Dobel Hari Ini</strong>
             <div class="chart-sub"><?= (int) ($dobelHariIni ?? 0) ?> data belum resolve</div>
           </div>
         </div>

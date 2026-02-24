@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title><?= esc($title ?? 'Absensi Guru') ?></title>
+  <title><?= esc($title ?? 'Presensi Guru') ?></title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="theme-color" content="#22c55e">

@@ -3,11 +3,11 @@
 
 <div class="card">
   <h2>👋 Halo, <?= esc(session('nama')) ?></h2>
-  <p>Siap melakukan absensi hari ini</p>
+  <p>Siap melakukan presensi hari ini</p>
 </div>
 
 <div class="card">
-  <button class="btn">📍 Absen Sekarang</button>
+  <button class="btn">📍 Presensi Sekarang</button>
 </div>
 
 @endsection

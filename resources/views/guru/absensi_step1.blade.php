@@ -40,7 +40,7 @@
 
 <div class="card mb-3 shadow-sm card-glass">
   <div class="card-body absensi-hero">
-    <h4 class="mb-1">📋 Absensi Sekolah Minggu</h4>
+    <h4 class="mb-1">📋 Presensi Sekolah Minggu</h4>
     <small>Pilih kelas & lokasi sebelum melanjutkan</small>
   </div>
 </div>
@@ -79,7 +79,7 @@
 </div>
 
 <button class="btn btn-absensi-main btn-lg btn-block">
-  ➡️ Lanjut Absensi
+  ➡️ Lanjut Presensi
 </button>
 
 <a href="<?= base_url('dashboard/guru') ?>"

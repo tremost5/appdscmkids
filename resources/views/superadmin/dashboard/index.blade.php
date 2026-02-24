@@ -41,12 +41,12 @@
   </div>
   <div class="card-stat bg-orange">
     <h3><?= $absen_hari_ini ?></h3>
-    <p>Absensi Hari Ini</p>
+    <p>Presensi Hari Ini</p>
     <i class="fas fa-clipboard-check"></i>
   </div>
   <div class="card-stat bg-red">
     <h3><?= $absen_dobel ?></h3>
-    <p>Absensi Dobel</p>
+    <p>Presensi Dobel</p>
     <i class="fas fa-exclamation-triangle"></i>
   </div>
 </div>

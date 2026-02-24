@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title><?= esc($judul ?? 'Rekap Absensi') ?></title>
+<title><?= esc($judul ?? 'Rekap Presensi') ?></title>
 
 <style>
 @page {
@@ -101,7 +101,7 @@ th {
 <div class="header">
     <img src="<?= FCPATH ?>assets/dscmkids.png">
     <h1>DSCM KIDS</h1>
-    <h2>Laporan Rekap Absensi</h2>
+    <h2>Laporan Rekap Presensi</h2>
     <p><?= esc($subjudul ?? 'Tanggal: '.$tanggal) ?></p>
 </div>
 

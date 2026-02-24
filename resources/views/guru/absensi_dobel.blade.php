@@ -10,7 +10,7 @@
 }
 </style>
 
-<a href="https://wa.me/62XXXXXXXXXX?text=Halo%20Admin%2C%20ada%20absensi%20dobel"
+<a href="https://wa.me/62XXXXXXXXXX?text=Halo%20Admin%2C%20ada%20presensi%20dobel"
    class="btn btn-success btn-sm">
 📲 Hubungi Admin
 </a>
@@ -24,14 +24,14 @@ Silakan lanjut mengajar, admin akan menyelesaikan.
   <div class="card-body d-flex align-items-center"
        style="background:linear-gradient(90deg,#f59e0b,#fbbf24);color:#78350f">
     <div>
-      <h4 class="mb-0">⚠️ Detail Absensi Dobel</h4>
-      <small>Murid sudah diabsen oleh guru lain</small>
+      <h4 class="mb-0">⚠️ Detail Presensi Dobel</h4>
+      <small>Murid sudah dipresensi oleh guru lain</small>
     </div>
   </div>
 </div>
 
 <?php if(empty($data)): ?>
-<div class="alert alert-success">✅ Tidak ada absensi dobel hari ini.</div>
+<div class="alert alert-success">✅ Tidak ada presensi dobel hari ini.</div>
 <?php else: ?>
 
 <?php

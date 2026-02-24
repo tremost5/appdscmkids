@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Absensi DSMC Kids</title>
+<title>Presensi DSCM Kids</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 html,body{

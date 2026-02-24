@@ -28,7 +28,7 @@ $canKegiatan = $isSuperadmin || (int) setting('guru_kegiatan', 1) === 1;
   <a href="<?= base_url('guru/absensi') ?>"
      class="nav-link <?= uri_string()=='guru/absensi'?'active':'' ?>">
     <i class="nav-icon fas fa-clipboard-check"></i>
-    <p>Absensi</p>
+    <p>Presensi</p>
   </a>
 </li>
 <?php endif; ?>
@@ -39,7 +39,7 @@ $canKegiatan = $isSuperadmin || (int) setting('guru_kegiatan', 1) === 1;
   <a href="<?= base_url('guru/absensi-hari-ini') ?>"
      class="nav-link <?= uri_string()=='guru/absensi-hari-ini'?'active':'' ?>">
     <i class="nav-icon fas fa-edit"></i>
-    <p>Absensi Hari Ini</p>
+    <p>Presensi Hari Ini</p>
   </a>
 </li>
 <?php endif; ?>

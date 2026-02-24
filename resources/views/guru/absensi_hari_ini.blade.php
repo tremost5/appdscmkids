@@ -8,7 +8,7 @@
 .guru-header-soft{background:linear-gradient(90deg,#f3e8ff,#fce7f3)!important}
 </style>
 
-<h3 class="mb-3">Absensi Hari Ini</h3>
+<h3 class="mb-3">Presensi Hari Ini</h3>
 
 <?php if (session()->getFlashdata('success')): ?>
   <div class="alert alert-success">
@@ -23,9 +23,9 @@
 <?php endif; ?>
 
 <?php if (!$absensi): ?>
-  <div class="alert alert-info">Belum ada absensi hari ini.</div>
+  <div class="alert alert-info">Belum ada presensi hari ini.</div>
   <a href="<?= base_url('dashboard/guru') ?>" class="btn btn-secondary">Dashboard</a>
-  <a href="<?= base_url('guru/absensi') ?>" class="btn btn-primary">Absensi</a>
+  <a href="<?= base_url('guru/absensi') ?>" class="btn btn-primary">Presensi</a>
 <?php else: ?>
 <?php
 $hadir = 0;
@@ -153,7 +153,7 @@ foreach($detail as $d):
 </form>
 
 <a href="<?= base_url('dashboard/guru') ?>" class="btn btn-secondary">Dashboard</a>
-<a href="<?= base_url('guru/absensi') ?>" class="btn btn-primary">Absensi</a>
+<a href="<?= base_url('guru/absensi') ?>" class="btn btn-primary">Presensi</a>
 
 <div id="fotoOverlay"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1050"

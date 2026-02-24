@@ -11,8 +11,8 @@ $mapKelas = [
 
 <section class="content-header">
   <div class="container-fluid">
-    <h1>Rekap Absensi</h1>
-    <p class="text-muted">Ringkasan absensi per tanggal & kelas</p>
+    <h1>Rekap Presensi</h1>
+    <p class="text-muted">Ringkasan presensi per tanggal & kelas</p>
   </div>
 </section>
 
@@ -100,7 +100,7 @@ $mapKelas = [
   <?php endforeach; ?>
 <?php else: ?>
   <div class="text-center text-muted py-4">
-    Tidak ada data absensi
+    Tidak ada data presensi
   </div>
 <?php endif; ?>
 

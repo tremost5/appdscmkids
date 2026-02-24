@@ -36,7 +36,7 @@
 
 <div class="card mb-3 shadow-sm">
   <div class="card-body absensi-hero">
-    <h4 class="mb-0">📋 FORM ABSENSI</h4>
+    <h4 class="mb-0">📋 FORM PRESENSI</h4>
     <small>Pastikan data benar sebelum menyimpan</small>
   </div>
 </div>
@@ -117,7 +117,7 @@ foreach($grp as $k=>$list):
         type="submit"
         class="btn btn-absensi-main btn-lg btn-block mt-3"
         disabled>
-  💾 Simpan Absensi
+  💾 Simpan Presensi
 </button>
 </div>
 </div>
@@ -241,7 +241,7 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
     if (res.status === 'success') {
       Swal.fire({
         icon: 'success',
-        title: '✅ Absensi berhasil disimpan',
+        title: '✅ Presensi berhasil disimpan',
         html: `📅 ${res.tanggal}<br>Tuhan Yesus Memberkati 🙏`,
         confirmButtonText: '🏠 Dashboard'
       }).then(() => {
@@ -272,7 +272,7 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
 
       Swal.fire({
         icon: 'warning',
-        title: 'Absensi Dobel',
+        title: 'Presensi Dobel',
         html: `
           <div style="text-align:left;font-size:14px">
 
@@ -285,7 +285,7 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
               margin-bottom:12px;
             ">
               <b>⚠️ Perhatian</b><br>
-              Beberapa murid <b>sudah diabsen sebelumnya</b> pada hari yang sama.
+              Beberapa murid <b>sudah dipresensi sebelumnya</b> pada hari yang sama.
             </div>
 
             <div style="
@@ -335,7 +335,7 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
       }).then(() => {
         // Reset + arahkan (anti stuck)
         btn.disabled = false;
-        btn.innerHTML = '💾 Simpan Absensi';
+        btn.innerHTML = '💾 Simpan Presensi';
         location.href = '<?= base_url('dashboard/guru') ?>';
       });
 
@@ -345,12 +345,12 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
     /* ================= ERROR SERVER ================= */
     Swal.fire('Error', res.message || 'Terjadi kesalahan', 'error');
     btn.disabled = false;
-    btn.innerHTML = '💾 Simpan Absensi';
+    btn.innerHTML = '💾 Simpan Presensi';
   })
   .catch(() => {
     Swal.fire('Error', 'Gagal menyimpan', 'error');
     btn.disabled = false;
-    btn.innerHTML = '💾 Simpan Absensi';
+    btn.innerHTML = '💾 Simpan Presensi';
   });
 });
 </script>
