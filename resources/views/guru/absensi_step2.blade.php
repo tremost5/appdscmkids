@@ -19,8 +19,8 @@
 #selfiePreview{display:none;width:100%;border-radius:12px;margin-top:8px}
 
 /* MODAL */
-#muridPreview{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999}
-#muridCard{background:#fff;border-radius:16px;padding:16px;width:90%;max-width:360px;text-align:center}
+#muridPreview{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto}
+#muridCard{background:#fff;border-radius:16px;padding:16px;width:90%;max-width:360px;max-height:calc(100vh - 32px);overflow-y:auto;text-align:center;margin:auto}
 #muridFoto{width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:10px;display:none}
 #muridAvatar{
   width:120px;height:120px;border-radius:50%;
@@ -32,6 +32,7 @@
 .absensi-hero{background:linear-gradient(90deg,#7c3aed,#ec4899)!important;color:#fff!important;border-radius:14px}
 .btn-absensi-main{background:linear-gradient(90deg,#7c3aed,#ec4899)!important;border:none!important;color:#fff!important;font-weight:700}
 .btn-absensi-main:hover{filter:brightness(1.05)}
+body.murid-preview-open{overflow:hidden}
 </style>
 
 <div class="card mb-3 shadow-sm">
@@ -65,15 +66,6 @@ $label=[1=>'PG',2=>'TKA',3=>'TKB',4=>'1',5=>'2',6=>'3',7=>'4',8=>'5',9=>'6'];
 usort($murid,fn($a,$b)=>[$a['kelas_id'],$a['nama_depan']]<=>[$b['kelas_id'],$b['nama_depan']]);
 $grp=[]; foreach($murid as $m){ $grp[$m['kelas_id']][]=$m; }
 
-// ===== MAP MURID (FIX DUPLICATE POPUP) =====
-$muridMap = [];
-foreach($murid as $m){
-  $muridMap[$m['id']] = [
-    'nama'  => trim(($m['panggilan'] ?: $m['nama_depan']).' '.$m['nama_belakang']),
-    'kelas' => $label[$m['kelas_id']]
-  ];
-}
-
 foreach($grp as $k=>$list):
 ?>
   <div class="kelas-divider" onclick="toggleKelas(this)">
@@ -82,10 +74,11 @@ foreach($grp as $k=>$list):
   <div class="kelas-content">
   <?php foreach($list as $m): ?>
     <div class="murid-row murid-item">
-      <div class="nama-murid"
-           data-nama="<?= esc($m['nama_depan'].' '.$m['nama_belakang']) ?>"
-           data-panggilan="<?= esc($m['panggilan'] ?: $m['nama_depan']) ?>"
-           data-kelas="<?= $label[$k] ?>">
+	      <div class="nama-murid"
+	           data-nama="<?= esc($m['nama_depan'].' '.$m['nama_belakang']) ?>"
+	           data-panggilan="<?= esc($m['panggilan'] ?: $m['nama_depan']) ?>"
+	           data-foto="<?= esc(base_url('uploads/murid/'.(!empty($m['foto']) ? $m['foto'] : 'default_murid.png'))) ?>"
+	           data-kelas="<?= $label[$k] ?>">
         <?= esc(($m['panggilan'] ?: $m['nama_depan']).' ('.$m['nama_depan'].' '.$m['nama_belakang'].')') ?>
       </div>
       <div><?= $label[$k] ?></div>
@@ -126,22 +119,13 @@ foreach($grp as $k=>$list):
 <!-- MODAL -->
 <div id="muridPreview">
   <div id="muridCard">
+    <div id="muridAvatar"></div>
     <img id="muridFoto">
     <h5 id="muridNama"></h5>
     <div id="muridKelas" class="text-muted"></div>
-    <small>Tap untuk menutup</small>
+    <button type="button" id="closeMuridPreview" class="btn btn-light btn-sm mt-2">Tutup</button>
   </div>
 </div>
-<script>
-/* ===== BUILD MAP MURID (FIX undefined) ===== */
-const MURID_MAP = {};
-document.querySelectorAll('.murid-item').forEach(el=>{
-  MURID_MAP[el.dataset.id] = {
-    nama: el.dataset.nama,
-    kelas: el.dataset.kelas
-  };
-});
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -155,16 +139,53 @@ searchMurid.onkeyup=()=>{
 };
 
 /* PREVIEW MURID */
+const muridPreview = document.getElementById('muridPreview');
+const muridCard = document.getElementById('muridCard');
+const muridFoto = document.getElementById('muridFoto');
+const muridAvatar = document.getElementById('muridAvatar');
+const muridNama = document.getElementById('muridNama');
+const muridKelas = document.getElementById('muridKelas');
+document.body.appendChild(muridPreview);
+
+function getInitials(name) {
+  const words = (name || '').trim().split(/\s+/).filter(Boolean);
+  return (words[0]?.[0] || '') + (words[1]?.[0] || '');
+}
+
+function closeMuridPreview() {
+  muridPreview.style.display='none';
+  document.body.classList.remove('murid-preview-open');
+}
+
 document.querySelectorAll('.nama-murid').forEach(n=>{
   n.onclick=e=>{
     e.stopPropagation();
     muridNama.innerText=n.dataset.nama;
     muridKelas.innerText='Kelas '+n.dataset.kelas;
-    muridFoto.src=n.dataset.foto;
+    muridAvatar.innerText = getInitials(n.dataset.nama).toUpperCase() || '?';
+    muridAvatar.style.display = 'flex';
+    muridFoto.style.display = 'none';
+    muridFoto.onerror = () => {
+      muridFoto.style.display = 'none';
+      muridAvatar.style.display = 'flex';
+    };
+    muridFoto.onload = () => {
+      muridFoto.style.display = 'block';
+      muridAvatar.style.display = 'none';
+    };
+    muridFoto.src=n.dataset.foto || '';
     muridPreview.style.display='flex';
+    document.body.classList.add('murid-preview-open');
   }
 });
-muridPreview.onclick=()=>muridPreview.style.display='none';
+muridPreview.onclick=(e)=>{
+  if (e.target === muridPreview) closeMuridPreview();
+};
+muridCard.onclick=(e)=>e.stopPropagation();
+document.getElementById('closeMuridPreview').onclick = closeMuridPreview;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && muridPreview.style.display === 'flex') closeMuridPreview();
+});
 
 /* COLLAPSE */
 function toggleKelas(el){

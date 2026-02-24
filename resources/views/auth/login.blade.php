@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Login Sistem Presensi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="/pwa/manifest.json">
+<meta name="theme-color" content="#2563eb">
 
 <link rel="stylesheet" href="/assets/adminlte/plugins/fontawesome-free/css/all.min.css">
 <link rel="stylesheet" href="/assets/adminlte/css/adminlte.min.css">
@@ -127,6 +129,25 @@ body {
     </div>
   </div>
 </div>
+<div class="modal fade" id="pwaInstallModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Install Aplikasi</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Tambahkan Presensi DSCM ke layar utama agar akses lebih cepat.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-dismiss="modal">Nanti</button>
+        <button type="button" class="btn btn-primary" id="btnInstallPwa">Install</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.getElementById('toggleLoginPassword');
@@ -139,6 +160,45 @@ document.addEventListener('DOMContentLoaded', () => {
     icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
   });
 });
+</script>
+
+<script>
+(() => {
+  let deferredPrompt = null;
+  const installButton = document.getElementById('btnInstallPwa');
+  const shownFlag = 'pwa-install-modal-shown';
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/pwa/sw.js', { scope: '/' }).catch(() => {});
+  }
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+
+    if (!sessionStorage.getItem(shownFlag)) {
+      sessionStorage.setItem(shownFlag, '1');
+      $('#pwaInstallModal').modal('show');
+    }
+  });
+
+  installButton?.addEventListener('click', async () => {
+    if (!deferredPrompt) {
+      $('#pwaInstallModal').modal('hide');
+      return;
+    }
+
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    $('#pwaInstallModal').modal('hide');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    $('#pwaInstallModal').modal('hide');
+  });
+})();
 </script>
 
 
