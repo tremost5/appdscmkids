@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Controllers;
 
@@ -30,7 +30,7 @@ class AuthForgot extends BaseController
                 ->with('error', 'Email tidak terdaftar.');
         }
 
-        // ðŸ‘‰ LOGIC KIRIM EMAIL PUNYAMU TETAP DI SINI
+        // 👉 LOGIC KIRIM EMAIL PUNYAMU TETAP DI SINI
 
         return redirect()->back()
             ->with('success', 'Link reset password sudah dikirim ke email Anda.');
@@ -40,71 +40,47 @@ class AuthForgot extends BaseController
     // RESET VIA WHATSAPP (OTP)
     // =========================
     public function wa()
-    {
-        helper('wa');
+{
+    helper('wa');
 
-        try {
-            $input = $this->request->getPost('no_hp');
-            if (!is_string($input) || trim($input) === '') {
-                return redirect()->back()
-                    ->with('error', 'Nomor WhatsApp wajib diisi.');
-            }
+    $input = $this->request->getPost('no_hp');
+    $no_hp = formatWA((string) $input);
 
-            $no_hp = formatWA($input);
-
-            if (!$no_hp) {
-                return redirect()->back()
-                    ->with('error', 'Format nomor WhatsApp tidak valid.');
-            }
-
-            $model = new \App\Models\UserModel();
-            $user  = $model->where('no_hp', $no_hp)->first();
-
-            if (!$user) {
-                return redirect()->back()
-                    ->with('error', 'Nomor WhatsApp tidak terdaftar.');
-            }
-
-            // OTP
-            $otp = rand(100000, 999999);
-
-            $updated = $model->update($user['id'], [
-                'reset_token'   => $otp,
-                'reset_expires' => date('Y-m-d H:i:s', strtotime('+5 minutes')),
-            ]);
-
-            if (!$updated) {
-                log_message('error', 'Gagal update reset_token untuk user_id: ' . $user['id']);
-                return redirect()->back()
-                    ->with('error', 'Terjadi kesalahan saat memproses permintaan. Coba lagi.');
-            }
-
-            $pesan =
-                "🔐 *Reset Password*\n\n"
-              . "Kode OTP Anda:\n"
-              . "*{$otp}*\n\n"
-              . "Berlaku 5 menit.\n"
-              . "Jangan bagikan kode ini.";
-
-            $sent = kirimWA($no_hp, $pesan);
-
-            if (!$sent) {
-                log_message('error', 'Gagal kirim OTP WA ke: ' . $no_hp);
-                return redirect()->back()
-                    ->with('error', 'Gagal mengirim OTP WhatsApp. Pastikan WA terhubung dan coba lagi.');
-            }
-
-            session()->set('reset_user', $user['id']);
-
-            return redirect()->to('/verify-otp')
-                ->with('success', 'Kode OTP telah dikirim ke WhatsApp Anda.');
-        } catch (\Throwable $e) {
-            log_message('error', 'Lupa password WA error: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan pada sistem. Silakan coba lagi.');
-        }
+    if (!$no_hp) {
+        return redirect()->back()
+            ->with('error', 'Format nomor WhatsApp tidak valid.');
     }
+
+    $model = new \App\Models\UserModel();
+    $user  = $model->where('no_hp', $no_hp)->first();
+
+    if (!$user) {
+        return redirect()->back()
+            ->with('error', 'Nomor WhatsApp tidak terdaftar.');
+    }
+
+    // OTP
+    $otp = rand(100000, 999999);
+
+    $model->update($user['id'], [
+        'reset_token'   => $otp,
+        'reset_expires' => date('Y-m-d H:i:s', strtotime('+5 minutes')),
+    ]);
+
+    $pesan =
+        "🔐 *Reset Password*\n\n"
+      . "Kode OTP Anda:\n"
+      . "*{$otp}*\n\n"
+      . "Berlaku 5 menit.\n"
+      . "Jangan bagikan kode ini.";
+
+    kirimWA($no_hp, $pesan);
+
+    session()->set('reset_user', $user['id']);
+
+    return redirect()->to('/verify-otp')
+        ->with('success', 'Kode OTP telah dikirim ke WhatsApp Anda.');
+}
 
 
 }
-
