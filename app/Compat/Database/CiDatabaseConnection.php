@@ -72,6 +72,11 @@ class CiDatabaseConnection
         return Schema::hasColumn($table, $field);
     }
 
+    public function getFieldNames(string $table): array
+    {
+        return Schema::getColumnListing($table);
+    }
+
     public function insertID(): int
     {
         return (int) DB::getPdo()->lastInsertId();
