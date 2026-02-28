@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reset Password via Email</title>
+<link rel="icon" type="image/png" sizes="192x192" href="<?= base_url('pwa/icons/icon-192.png') ?>">
+<link rel="apple-touch-icon" href="<?= base_url('pwa/icons/icon-192.png') ?>">
 
 <link rel="stylesheet" href="<?= base_url('assets/adminlte/css/adminlte.min.css') ?>">
 

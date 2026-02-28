@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lupa Password</title>
+<link rel="icon" type="image/png" sizes="192x192" href="<?= base_url('pwa/icons/icon-192.png') ?>">
+<link rel="apple-touch-icon" href="<?= base_url('pwa/icons/icon-192.png') ?>">
 
 <link rel="stylesheet" href="<?= base_url('assets/adminlte/css/adminlte.min.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/adminlte/plugins/fontawesome-free/css/all.min.css') ?>">

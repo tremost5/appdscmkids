@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Login Sistem Presensi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" sizes="192x192" href="<?= base_url('pwa/icons/icon-192.png') ?>">
+<link rel="apple-touch-icon" href="<?= base_url('pwa/icons/icon-192.png') ?>">
 <link rel="manifest" href="/pwa/manifest.json">
 <meta name="theme-color" content="#2563eb">
 
