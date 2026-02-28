@@ -1,6 +1,18 @@
 const CACHE_NAME = 'presensi-guru-v2';
 const OFFLINE_URL = '/pwa/offline.html';
 
+function isCacheableRequest(request) {
+  try {
+    const url = new URL(request.url);
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return false;
+    }
+    return url.origin === self.location.origin;
+  } catch (e) {
+    return false;
+  }
+}
+
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
@@ -22,6 +34,7 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  if (!isCacheableRequest(event.request)) return;
 
   event.respondWith(
     fetch(event.request)
