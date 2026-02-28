@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -22,6 +22,62 @@ body {
 }
 .card {
     border-radius: 12px;
+}
+.install-modal .modal-content {
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+}
+.install-modal .modal-header {
+    border-bottom: 0;
+    padding: 14px 18px 10px;
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    color: #fff;
+}
+.install-modal .modal-title {
+    font-weight: 700;
+}
+.install-modal .close {
+    color: #fff;
+    opacity: .9;
+}
+.install-modal .modal-body {
+    padding: 16px 18px 6px;
+}
+.install-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #dbeafe;
+    color: #1d4ed8;
+    background: #eff6ff;
+    font-size: .8rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+}
+.install-copy {
+    color: #334155;
+    margin-bottom: 10px;
+}
+.install-steps {
+    margin: 0;
+    padding-left: 20px;
+    color: #334155;
+}
+.install-steps li {
+    margin-bottom: 6px;
+}
+.install-note {
+    font-size: .82rem;
+    color: #64748b;
+    margin-top: 8px;
+}
+.install-modal .modal-footer {
+    border-top: 0;
+    padding: 10px 18px 16px;
 }
 </style>
 </head>
@@ -53,7 +109,6 @@ body {
       <form action="/login" method="post">
         <?= csrf_field() ?>
 
-        <!-- USERNAME -->
         <div class="input-group mb-3">
           <input type="text"
                  name="username"
@@ -68,29 +123,23 @@ body {
           </div>
         </div>
 
-        <!-- PASSWORD -->
         <div class="form-group">
-  <label>Password</label>
+          <label>Password</label>
+          <div class="input-group">
+            <input type="password"
+                   name="password"
+                   id="loginPassword"
+                   class="form-control"
+                   placeholder="Password"
+                   required>
+            <div class="input-group-append">
+              <span class="input-group-text" id="toggleLoginPassword" style="cursor:pointer">
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
+          </div>
+        </div>
 
-  <div class="input-group">
-  <input type="password"
-         name="password"
-         id="loginPassword"
-         class="form-control"
-         placeholder="Password"
-         required>
-
-  <div class="input-group-append">
-    <span class="input-group-text" id="toggleLoginPassword" style="cursor:pointer">
-      <i class="fas fa-eye"></i>
-    </span>
-  </div>
-</div>
-</div>
-
-
-
-        <!-- CAPTCHA -->
         <div class="input-group mb-3">
           <input type="number"
                  name="captcha"
@@ -104,11 +153,10 @@ body {
           </div>
         </div>
 
-        <!-- SUBMIT -->
         <div class="row">
           <div class="col-12">
             <button type="submit" class="btn btn-primary btn-block">
-              🔐 Login
+              <i class="fas fa-lock"></i> Login
             </button>
           </div>
         </div>
@@ -129,17 +177,21 @@ body {
     </div>
   </div>
 </div>
-<div class="modal fade" id="pwaInstallModal" tabindex="-1" aria-hidden="true">
+
+<div class="modal fade install-modal" id="pwaInstallModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Install Aplikasi</h5>
+        <h5 class="modal-title">Pasang Aplikasi Presensi</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body" id="pwaInstallBody">
-        Tambahkan Presensi DSCM ke layar utama agar akses lebih cepat.
+        <span class="install-badge" id="pwaInstallBadge"><i class="fas fa-mobile-alt"></i> PWA</span>
+        <div class="install-copy" id="pwaInstallCopy">Tambahkan Presensi DSCM ke layar utama agar akses lebih cepat.</div>
+        <ol class="install-steps" id="pwaInstallSteps"></ol>
+        <div class="install-note" id="pwaInstallNote"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-dismiss="modal">Nanti</button>
@@ -148,67 +200,70 @@ body {
     </div>
   </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.getElementById('toggleLoginPassword');
-  const input  = document.getElementById('loginPassword');
-  const icon   = toggle.querySelector('i');
+  const input = document.getElementById('loginPassword');
 
-  toggle.addEventListener('click', () => {
-    const isHidden = input.type === 'password';
-    input.type = isHidden ? 'text' : 'password';
-    icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
-  });
-});
-</script>
+  if (toggle && input) {
+    const icon = toggle.querySelector('i');
+    toggle.addEventListener('click', () => {
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      if (icon) {
+        icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+      }
+    });
+  }
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
   let deferredPrompt = null;
-  const modal = document.getElementById('pwaInstallModal');
-  const modalBody = document.getElementById('pwaInstallBody');
+  const modalEl = document.getElementById('pwaInstallModal');
+  const badgeEl = document.getElementById('pwaInstallBadge');
+  const copyEl = document.getElementById('pwaInstallCopy');
+  const stepsEl = document.getElementById('pwaInstallSteps');
+  const noteEl = document.getElementById('pwaInstallNote');
   const installButton = document.getElementById('btnInstallPwa');
-  const closeButtons = modal.querySelectorAll('[data-dismiss="modal"], .close');
-  const shownFlag = 'pwa-install-modal-shown-v2';
+  const shownFlag = 'pwa-install-modal-shown-v3';
 
   const ua = navigator.userAgent.toLowerCase();
   const isIos = /iphone|ipad|ipod/.test(ua);
   const isSafari = /safari/.test(ua) && !/crios|fxios|edgios|chrome|android/.test(ua);
-  const isChromium = /chrome|crios|edg|opr/.test(ua);
+  const isAndroid = /android/.test(ua);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-  function showModal() {
-    if (!modal) return;
-    modal.style.display = 'block';
-    modal.classList.add('show');
-    modal.setAttribute('aria-modal', 'true');
-    modal.removeAttribute('aria-hidden');
-    document.body.classList.add('modal-open');
-
-    let backdrop = document.getElementById('pwaModalBackdrop');
-    if (!backdrop) {
-      backdrop = document.createElement('div');
-      backdrop.id = 'pwaModalBackdrop';
-      backdrop.className = 'modal-backdrop fade show';
-      backdrop.addEventListener('click', hideModal);
-      document.body.appendChild(backdrop);
+  function setInstallContent(platform, title, steps, note) {
+    if (badgeEl) {
+      badgeEl.innerHTML = '<i class="fas fa-mobile-alt"></i> ' + platform;
+    }
+    if (copyEl) {
+      copyEl.textContent = title;
+    }
+    if (stepsEl) {
+      stepsEl.innerHTML = '';
+      steps.forEach((step) => {
+        const li = document.createElement('li');
+        li.innerHTML = step;
+        stepsEl.appendChild(li);
+      });
+    }
+    if (noteEl) {
+      noteEl.textContent = note || '';
     }
   }
 
-  function hideModal() {
-    if (!modal) return;
-    modal.classList.remove('show');
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-    modal.removeAttribute('aria-modal');
-    document.body.classList.remove('modal-open');
-    document.getElementById('pwaModalBackdrop')?.remove();
+  function showModal() {
+    if (!modalEl || !window.jQuery) return;
+    window.jQuery(modalEl).modal('show');
   }
 
-  closeButtons.forEach((btn) => btn.addEventListener('click', hideModal));
+  function hideModal() {
+    if (!modalEl || !window.jQuery) return;
+    window.jQuery(modalEl).modal('hide');
+  }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/pwa/sw.js', { scope: '/' }).catch(() => {});
+    navigator.serviceWorker.register('/sw-guru.js', { scope: '/' }).catch(() => {});
   }
 
   if (isStandalone) return;
@@ -216,7 +271,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (isIos && isSafari) {
     if (!sessionStorage.getItem(shownFlag)) {
       sessionStorage.setItem(shownFlag, '1');
-      modalBody.innerHTML = 'Safari iPhone/iPad: tap <b>Share</b> lalu pilih <b>Add to Home Screen</b>.';
+      setInstallContent(
+        'iPhone / iPad',
+        'Pasang aplikasi lewat Safari agar login lebih cepat.',
+        [
+          'Tap tombol <b>Share</b> di Safari.',
+          'Pilih <b>Add to Home Screen</b>.',
+          'Tap <b>Add</b> untuk selesai.'
+        ],
+        'Setelah ditambahkan, buka dari ikon di layar utama.'
+      );
       installButton.textContent = 'Saya Mengerti';
       installButton.onclick = hideModal;
       showModal();
@@ -227,33 +291,52 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredPrompt = event;
-    if (!sessionStorage.getItem(shownFlag)) {
-      sessionStorage.setItem(shownFlag, '1');
-      modalBody.textContent = 'Tambahkan Presensi DSCM ke layar utama agar akses lebih cepat.';
-      installButton.textContent = 'Install';
-      installButton.onclick = async () => {
-        if (!deferredPrompt) {
-          hideModal();
-          return;
-        }
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
+
+    if (sessionStorage.getItem(shownFlag)) return;
+
+    sessionStorage.setItem(shownFlag, '1');
+    setInstallContent(
+      'Android',
+      'Install aplikasi Presensi untuk pengalaman lebih cepat.',
+      [
+        'Tap tombol <b>Install</b> di bawah ini.',
+        'Konfirmasi pemasangan dari popup browser.',
+        'Buka aplikasi dari home screen.'
+      ],
+      'Data tetap dari website yang sama, hanya aksesnya jadi seperti aplikasi.'
+    );
+    installButton.textContent = 'Install';
+    installButton.onclick = async () => {
+      if (!deferredPrompt) {
         hideModal();
-      };
-      showModal();
-    }
+        return;
+      }
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      hideModal();
+    };
+    showModal();
   });
 
-  if (isChromium && !sessionStorage.getItem(shownFlag)) {
+  if (isAndroid && !sessionStorage.getItem(shownFlag)) {
     setTimeout(() => {
       if (deferredPrompt || sessionStorage.getItem(shownFlag)) return;
       sessionStorage.setItem(shownFlag, '1');
-      modalBody.innerHTML = 'Chrome: buka menu browser (<b>⋮</b>) lalu pilih <b>Install app</b> atau <b>Add to Home screen</b>.';
+      setInstallContent(
+        'Android',
+        'Jika tombol install belum muncul, pasang manual dari menu browser.',
+        [
+          'Buka menu browser (<b>&#8942;</b>).',
+          'Pilih <b>Install app</b> atau <b>Add to Home screen</b>.',
+          'Konfirmasi lalu buka dari ikon baru.'
+        ],
+        ''
+      );
       installButton.textContent = 'Tutup';
       installButton.onclick = hideModal;
       showModal();
-    }, 1500);
+    }, 1400);
   }
 
   window.addEventListener('appinstalled', () => {
@@ -262,7 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-
 
 <script src="/assets/adminlte/plugins/jquery/jquery.min.js"></script>
 <script src="/assets/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
