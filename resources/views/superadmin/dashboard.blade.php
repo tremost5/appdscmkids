@@ -158,6 +158,9 @@
         <h6>Emergency Actions</h6>
         <div class="chart-sub mb-3">Gunakan hanya saat kondisi insiden/maintenance.</div>
         <div class="emergency-actions">
+          <a href="<?= base_url('superadmin/wa-template') ?>" class="btn btn-success emergency-btn">
+            <i class="fab fa-whatsapp mr-1"></i> WA Template & Penerima
+          </a>
           <button class="btn btn-danger emergency-btn" onclick="doAction('logout-all')">
             Force Logout Semua User
           </button>
