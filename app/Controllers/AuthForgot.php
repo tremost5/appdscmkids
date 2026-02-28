@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
+use Illuminate\Support\Facades\Mail;
 
 class AuthForgot extends BaseController
 {
@@ -16,10 +17,14 @@ class AuthForgot extends BaseController
     // =========================
     public function email()
     {
-        $email = $this->request->getPost('email');
+        $email = trim((string) $this->request->getPost('email'));
 
         if (!$email) {
             return redirect()->back()->with('error', 'Email wajib diisi.');
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->back()->with('error', 'Format email tidak valid.');
         }
 
         $model = new UserModel();
@@ -30,10 +35,101 @@ class AuthForgot extends BaseController
                 ->with('error', 'Email tidak terdaftar.');
         }
 
-        // 👉 LOGIC KIRIM EMAIL PUNYAMU TETAP DI SINI
+        $token = bin2hex(random_bytes(32));
+        $expiredAt = date('Y-m-d H:i:s', strtotime('+60 minutes'));
+
+        $model->update($user['id'], [
+            'reset_token' => $token,
+            'reset_expires' => $expiredAt,
+        ]);
+
+        $resetLink = base_url('reset-password-email?token=' . urlencode($token));
+        $nama = trim((string) (($user['nama_depan'] ?? '') . ' ' . ($user['nama_belakang'] ?? '')));
+        $nama = $nama !== '' ? $nama : (string) ($user['username'] ?? 'User');
+
+        $mailBody = "Shalom {$nama},\n\n"
+            . "Kami menerima permintaan reset password akun Presensi Anda.\n"
+            . "Klik link berikut untuk membuat password baru:\n{$resetLink}\n\n"
+            . "Link berlaku sampai {$expiredAt}.\n"
+            . "Jika Anda tidak merasa meminta reset password, abaikan email ini.\n\n"
+            . "Tuhan Yesus memberkati.";
+
+        try {
+            Mail::raw($mailBody, function ($message) use ($email, $nama): void {
+                $message->to($email, $nama)
+                    ->subject('Reset Password - Presensi DSCM');
+            });
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal kirim email reset password: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengirim email reset password. Coba lagi nanti.');
+        }
 
         return redirect()->back()
             ->with('success', 'Link reset password sudah dikirim ke email Anda.');
+    }
+
+    public function resetFormEmail()
+    {
+        $token = trim((string) $this->request->getGet('token'));
+        if ($token === '') {
+            return redirect()->to('/forgot')->with('error', 'Token reset tidak valid.');
+        }
+
+        $model = new UserModel();
+        $user = $model
+            ->where('reset_token', $token)
+            ->where('reset_expires >=', date('Y-m-d H:i:s'))
+            ->first();
+
+        if (!$user) {
+            return redirect()->to('/forgot')->with('error', 'Link reset tidak valid atau sudah kedaluwarsa.');
+        }
+
+        return view('auth/reset_password_email', [
+            'token' => $token,
+            'email' => (string) ($user['email'] ?? ''),
+        ]);
+    }
+
+    public function resetSaveEmail()
+    {
+        $token = trim((string) $this->request->getPost('token'));
+        $password = (string) $this->request->getPost('password');
+        $confirm = (string) $this->request->getPost('password_confirm');
+
+        if ($token === '') {
+            return redirect()->to('/forgot')->with('error', 'Token reset tidak valid.');
+        }
+
+        if ($password === '' || $confirm === '') {
+            return redirect()->back()->withInput()->with('error', 'Password wajib diisi.');
+        }
+
+        if (strlen($password) < 6) {
+            return redirect()->back()->withInput()->with('error', 'Password minimal 6 karakter.');
+        }
+
+        if ($password !== $confirm) {
+            return redirect()->back()->withInput()->with('error', 'Konfirmasi password tidak cocok.');
+        }
+
+        $model = new UserModel();
+        $user = $model
+            ->where('reset_token', $token)
+            ->where('reset_expires >=', date('Y-m-d H:i:s'))
+            ->first();
+
+        if (!$user) {
+            return redirect()->to('/forgot')->with('error', 'Link reset tidak valid atau sudah kedaluwarsa.');
+        }
+
+        $model->update((int) $user['id'], [
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'reset_token' => null,
+            'reset_expires' => null,
+        ]);
+
+        return redirect()->to('/login')->with('success', 'Password berhasil diperbarui. Silakan login.');
     }
 
     // =========================

@@ -55,6 +55,8 @@ Route::get('/register-pending', [AuthRegister::class, 'pending']);
 Route::get('/forgot', [AuthForgot::class, 'index']);
 Route::post('/forgot/email', [AuthForgot::class, 'email']);
 Route::post('/forgot/wa', [AuthForgot::class, 'wa']);
+Route::get('/reset-password-email', [AuthForgot::class, 'resetFormEmail']);
+Route::post('/reset-password-email', [AuthForgot::class, 'resetSaveEmail']);
 
 Route::get('/verify-otp', [AuthOtp::class, 'form']);
 Route::post('/verify-otp', [AuthOtp::class, 'verify']);
