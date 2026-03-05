@@ -361,7 +361,7 @@
 
     <div class="chart-card">
       <h6 class="card-head"><span class="head-icon head-icon--month"><i class="fas fa-chart-bar"></i></span>Grafik Kehadiran Bulan Ini</h6>
-      <div class="chart-sub">Gabungan vs Unity dari tanggal 1 sampai hari ini</div>
+      <div class="chart-sub">Reguler vs Unity Peter/David/Samuel/Joshua</div>
       <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
     </div>
 
@@ -418,7 +418,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const weeklyUnityData = @json($weeklyUnityData ?? []);
   const monthlyLabels = @json($monthlyLabels ?? []);
   const monthlyData = @json($monthlyData ?? []);
+  const monthlyRegularData = @json($monthlyRegularData ?? []);
   const monthlyUnityData = @json($monthlyUnityData ?? []);
+  const monthlyUnitySeries = @json($monthlyUnitySeries ?? []);
+  const unityMeta = @json(unityMetaMap());
 
   const commonGrid = {
     color: 'rgba(148,163,184,.25)',
@@ -468,18 +471,11 @@ document.addEventListener('DOMContentLoaded', () => {
     data: {
       labels: monthlyLabels,
       datasets: [{
-        label: 'Hadir',
-        data: monthlyData,
+        label: 'Reguler',
+        data: monthlyRegularData,
         borderRadius: 8,
         backgroundColor: 'rgba(14,165,233,.78)',
         borderColor: '#0284c7',
-        borderWidth: 1.2
-      },{
-        label: 'Unity',
-        data: monthlyUnityData,
-        borderRadius: 8,
-        backgroundColor: 'rgba(124,58,237,.65)',
-        borderColor: '#7c3aed',
         borderWidth: 1.2
       }]
     },
@@ -493,6 +489,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  const chartMonthly = Chart.getChart(document.getElementById('chartMonthly'));
+  if (chartMonthly) {
+    Object.keys(monthlyUnitySeries || {}).forEach((unityName) => {
+      const meta = unityMeta[unityName] || { color: '#7c3aed' };
+      chartMonthly.data.datasets.push({
+        label: unityName,
+        data: monthlyUnitySeries[unityName] || [],
+        borderRadius: 8,
+        backgroundColor: meta.color,
+        borderColor: meta.color,
+        borderWidth: 1.2
+      });
+    });
+    chartMonthly.update();
+  }
 
   const $materiModal = window.jQuery ? window.jQuery('#materiModal') : null;
   if ($materiModal && $materiModal.length) {

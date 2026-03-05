@@ -181,51 +181,94 @@ public function guru()
     $monthStart = date('Y-m-01');
     $today = date('Y-m-d');
 
-    $monthlyRows = $db->table('absensi_detail d')
-        ->select('a.tanggal, COUNT(d.id) as total')
-        ->join('absensi a', 'a.id = d.absensi_id', 'inner')
-        ->where('a.guru_id', $userId)
-        ->where('d.status', 'hadir')
-        ->where('a.tanggal >=', $monthStart)
-        ->where('a.tanggal <=', $today);
-    $monthlyRows = $monthlyRows
-        ->groupBy('a.tanggal')
-        ->orderBy('a.tanggal', 'ASC')
-        ->get()
-        ->getResultArray();
-
-    $monthlyMap = [];
-    foreach ($monthlyRows as $row) {
-        $monthlyMap[$row['tanggal']] = (int) $row['total'];
-    }
-
     $monthlyLabels = [];
     $monthlyData = [];
-    $monthlyUnityMap = [];
+    $monthlyRegularMap = [];
+    $monthlyUnityData = [];
+    $unitySeriesMap = [];
+
     if ($hasJenisPresensi) {
-        $monthlyUnityRows = $db->table('absensi_detail d')
+        $monthlyRegularRows = $db->table('absensi_detail d')
             ->select('a.tanggal, COUNT(d.id) as total')
             ->join('absensi a', 'a.id = d.absensi_id', 'inner')
             ->where('a.guru_id', $userId)
+            ->where('a.jenis_presensi', 'reguler')
             ->whereIn('d.status', ['hadir', 'dobel'])
-            ->where('a.jenis_presensi', 'unity')
             ->where('a.tanggal >=', $monthStart)
             ->where('a.tanggal <=', $today)
             ->groupBy('a.tanggal')
             ->orderBy('a.tanggal', 'ASC')
             ->get()
             ->getResultArray();
+        foreach ($monthlyRegularRows as $row) {
+            $monthlyRegularMap[$row['tanggal']] = (int) $row['total'];
+        }
+
+        foreach (array_keys(unityMetaMap()) as $unityName) {
+            $unitySeriesMap[$unityName] = [];
+        }
+
+        $monthlyUnityRows = $db->table('absensi_detail d')
+            ->select('a.tanggal, m.unity, COUNT(d.id) as total')
+            ->join('absensi a', 'a.id = d.absensi_id', 'inner')
+            ->join('murid m', 'm.id = d.murid_id', 'inner')
+            ->where('a.guru_id', $userId)
+            ->where('a.jenis_presensi', 'unity')
+            ->whereIn('d.status', ['hadir', 'dobel'])
+            ->where('a.tanggal >=', $monthStart)
+            ->where('a.tanggal <=', $today)
+            ->groupBy('a.tanggal')
+            ->groupBy('m.unity')
+            ->orderBy('a.tanggal', 'ASC')
+            ->get()
+            ->getResultArray();
+
         foreach ($monthlyUnityRows as $row) {
-            $monthlyUnityMap[$row['tanggal']] = (int) $row['total'];
+            $unityName = trim((string) ($row['unity'] ?? ''));
+            if ($unityName === '' || !array_key_exists($unityName, $unitySeriesMap)) {
+                continue;
+            }
+            $unitySeriesMap[$unityName][$row['tanggal']] = (int) $row['total'];
+        }
+    } else {
+        $monthlyRows = $db->table('absensi_detail d')
+            ->select('a.tanggal, COUNT(d.id) as total')
+            ->join('absensi a', 'a.id = d.absensi_id', 'inner')
+            ->where('a.guru_id', $userId)
+            ->whereIn('d.status', ['hadir', 'dobel'])
+            ->where('a.tanggal >=', $monthStart)
+            ->where('a.tanggal <=', $today)
+            ->groupBy('a.tanggal')
+            ->orderBy('a.tanggal', 'ASC')
+            ->get()
+            ->getResultArray();
+        foreach ($monthlyRows as $row) {
+            $monthlyRegularMap[$row['tanggal']] = (int) $row['total'];
         }
     }
-    $monthlyUnityData = [];
+
+    $monthlyRegularData = [];
+    $monthlyUnitySeries = [];
+    foreach (array_keys($unitySeriesMap) as $unityName) {
+        $monthlyUnitySeries[$unityName] = [];
+    }
+
     $daysInRange = (int) date('j');
     for ($d = 1; $d <= $daysInRange; $d++) {
         $date = date('Y-m-') . str_pad((string) $d, 2, '0', STR_PAD_LEFT);
         $monthlyLabels[] = (string) $d;
-        $monthlyData[] = $monthlyMap[$date] ?? 0;
-        $monthlyUnityData[] = $monthlyUnityMap[$date] ?? 0;
+        $regularValue = $monthlyRegularMap[$date] ?? 0;
+        $monthlyRegularData[] = $regularValue;
+
+        $unityTotal = 0;
+        foreach ($monthlyUnitySeries as $unityName => $_) {
+            $v = $unitySeriesMap[$unityName][$date] ?? 0;
+            $monthlyUnitySeries[$unityName][] = $v;
+            $unityTotal += $v;
+        }
+
+        $monthlyUnityData[] = $unityTotal;
+        $monthlyData[] = $regularValue + $unityTotal;
     }
 
     $todayCount = $weeklyData[6] ?? 0;
@@ -294,7 +337,9 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
         'weeklyUnityData' => $weeklyUnityData,
         'monthlyLabels'   => $monthlyLabels,
         'monthlyData'     => $monthlyData,
+        'monthlyRegularData' => $monthlyRegularData,
         'monthlyUnityData'=> $monthlyUnityData,
+        'monthlyUnitySeries' => $monthlyUnitySeries,
         'todayCount'      => $todayCount,
         'todayUnityCount' => $todayUnityCount,
         'weeklyTotal'     => $weeklyTotal,
