@@ -241,9 +241,6 @@ if ($role == 2) { // ADMIN
   <a href="<?= base_url('guru/murid') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'guru/murid') ? 'active' : '' ?>">
     <i class="fas fa-user-graduate"></i><span>Murid</span>
   </a>
-  <a href="<?= base_url('guru/profil') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'guru/profil') ? 'active' : '' ?>">
-    <i class="fas fa-user"></i><span>Profil</span>
-  </a>
 </nav>
 <?php endif; ?>
 
