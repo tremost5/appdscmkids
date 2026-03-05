@@ -46,8 +46,10 @@
     <select id="filterKelas" class="form-control">
       <option value="">Semua Kelas</option>
       <?php foreach($kelas as $k): ?>
+        <?php if (strtolower(trim((string) ($k['nama_kelas'] ?? ''))) === 'lulus') continue; ?>
         <option value="<?= $k['id'] ?>"><?= esc($k['nama_kelas']) ?></option>
       <?php endforeach ?>
+      <option value="unity">Unity</option>
     </select>
   </div>
 
@@ -83,7 +85,8 @@
 ?>
 <tr class="murid-item"
     data-nama="<?= strtolower($namaLengkap.' '.$panggilan) ?>"
-    data-kelas="<?= $m['kelas_id'] ?>">
+    data-kelas="<?= $m['kelas_id'] ?>"
+    data-unity="<?= esc(trim((string) ($m['unity'] ?? ''))) ?>">
 
   <td>
     <span class="text-primary murid-detail"
@@ -201,7 +204,12 @@ function applyFilter(){
   const q=document.getElementById('searchMurid').value.toLowerCase();
   const k=document.getElementById('filterKelas').value;
   document.querySelectorAll('.murid-item').forEach(r=>{
-    r.style.display=(r.dataset.nama.includes(q)&&(!k||r.dataset.kelas===k))?'':'none';
+    const byName = r.dataset.nama.includes(q);
+    let byClass = !k || r.dataset.kelas === k;
+    if (k === 'unity') {
+      byClass = !!(r.dataset.unity && r.dataset.unity.trim() !== '');
+    }
+    r.style.display=(byName && byClass)?'':'none';
   });
 }
 
