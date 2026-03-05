@@ -178,7 +178,7 @@
           <div class="chart-sub">Belum ada data unity.</div>
         <?php else: ?>
           <?php foreach ($unitySummary as $u): ?>
-            <div class="chart-sub mb-1"><?= unityBadge($u['unity'] ?? '') ?> <?= esc($u['unity'] ?? '-') ?>: <?= (int) ($u['total'] ?? 0) ?> murid</div>
+            <div class="chart-sub mb-1"><?= function_exists('unityBadge') ? unityBadge($u['unity'] ?? '') : '★' ?> <?= esc($u['unity'] ?? '-') ?>: <?= (int) ($u['total'] ?? 0) ?> murid</div>
           <?php endforeach; ?>
         <?php endif; ?>
       </div>

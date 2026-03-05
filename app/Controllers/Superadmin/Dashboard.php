@@ -9,6 +9,7 @@ class Dashboard extends BaseController
 {
     public function index()
     {
+        try {
         $db = Database::connect();
         $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
 
@@ -155,6 +156,36 @@ class Dashboard extends BaseController
             'maintenanceActive' => $maintenanceActive,
             'unitySummary'   => $unitySummary,
         ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Superadmin dashboard failed: {message}', ['message' => $e->getMessage()]);
+
+            $weeklyLabels = [];
+            $weeklyData = [];
+            $weeklyUnityData = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $weeklyLabels[] = date('D', strtotime("-{$i} days"));
+                $weeklyData[] = 0;
+                $weeklyUnityData[] = 0;
+            }
+
+            return view('superadmin/dashboard', [
+                'total_users'    => 0,
+                'user_online'    => 0,
+                'absen_hari_ini' => 0,
+                'absen_unity_hari_ini' => 0,
+                'absen_dobel'    => 0,
+                'absen_dobel_unity' => 0,
+                'total_murid'    => 0,
+                'weeklyLabels'   => $weeklyLabels,
+                'weeklyData'     => $weeklyData,
+                'weeklyUnityData'=> $weeklyUnityData,
+                'roleLabels'     => ['Superadmin', 'Admin', 'Guru'],
+                'roleData'       => [0, 0, 0],
+                'activity'       => [],
+                'maintenanceActive' => false,
+                'unitySummary'   => [],
+            ]);
+        }
     }
 
     public function action()

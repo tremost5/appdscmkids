@@ -357,6 +357,7 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
     ===================================================== */
 public function admin()
 {
+    try {
     $now = time();
     $today = date('Y-m-d');
     $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
@@ -595,6 +596,54 @@ public function admin()
         'avgHarian'       => $avgHarian,
         'unitySummary'    => $unitySummary,
     ]);
+    } catch (\Throwable $e) {
+        log_message('error', 'Dashboard admin failed: {message}', ['message' => $e->getMessage()]);
+
+        $weeklyLabels = [];
+        $weeklyData = [];
+        $weeklyUnityData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $weeklyLabels[] = date('D', strtotime("-{$i} days"));
+            $weeklyData[] = 0;
+            $weeklyUnityData[] = 0;
+        }
+
+        $monthlyLabels = [];
+        $monthlyData = [];
+        $monthlyUnityData = [];
+        for ($d = 1, $days = (int) date('j'); $d <= $days; $d++) {
+            $monthlyLabels[] = (string) $d;
+            $monthlyData[] = 0;
+            $monthlyUnityData[] = 0;
+        }
+
+        return view('dashboard/admin', [
+            'total_guru'      => 0,
+            'guru_online'     => 0,
+            'guru_idle'       => 0,
+            'guru_offline'    => 0,
+            'dobelHariIni'    => 0,
+            'guruNonaktifCount' => 0,
+            'guruBaruHariIniCount' => 0,
+            'guruBaruHariIniList' => [],
+            'materiMingguIni' => [],
+            'ultahGuru'       => [],
+            'weeklyLabels'    => $weeklyLabels,
+            'weeklyData'      => $weeklyData,
+            'weeklyUnityData' => $weeklyUnityData,
+            'monthlyLabels'   => $monthlyLabels,
+            'monthlyData'     => $monthlyData,
+            'monthlyUnityData'=> $monthlyUnityData,
+            'todayHadir'      => 0,
+            'todayHadirUnity' => 0,
+            'totalHadirMinggu'=> 0,
+            'totalHadirMingguUnity' => 0,
+            'totalHadirBulan' => 0,
+            'totalHadirBulanUnity' => 0,
+            'avgHarian'       => 0,
+            'unitySummary'    => [],
+        ]);
+    }
 }
 
     /* =====================================================
@@ -633,3 +682,4 @@ public function admin()
     }
 
 }
+
