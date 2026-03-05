@@ -80,12 +80,18 @@ public function guru()
         ->findAll();
 
     foreach ($ultah as &$u) {
-        $ultahDate = \CodeIgniter\I18n\Time::createFromFormat('Y-m-d', $u['tanggal_lahir'])
-            ->setYear(date('Y'));
-        $today = \CodeIgniter\I18n\Time::today();
-        $days  = $today->difference($ultahDate)->getDays();
-        if ($ultahDate->isBefore($today)) $days = -$days;
-        $u['h_minus'] = $days;
+        try {
+            $ultahDate = \CodeIgniter\I18n\Time::createFromFormat('Y-m-d', (string) ($u['tanggal_lahir'] ?? ''))
+                ->setYear((int) date('Y'));
+            $today = \CodeIgniter\I18n\Time::today();
+            $days  = $today->difference($ultahDate)->getDays();
+            if ($ultahDate->isBefore($today)) {
+                $days = -$days;
+            }
+            $u['h_minus'] = $days;
+        } catch (\Throwable $e) {
+            $u['h_minus'] = null;
+        }
     }
 
     // ==========================
@@ -181,16 +187,21 @@ public function guru()
     $avgWeekly = $weeklyTotal > 0 ? round($weeklyTotal / 7, 1) : 0;
 
     $unitySummary = [];
-    if ($this->hasTableColumn('murid', 'unity')) {
-        $unitySummary = $db->table('murid')
-            ->select('unity, COUNT(id) as total')
-            ->where('status', 'aktif')
-            ->where('unity IS NOT NULL', null, false)
-            ->where('unity <>', '')
-            ->groupBy('unity')
-            ->orderBy('unity', 'ASC')
-            ->get()
-            ->getResultArray();
+    try {
+        if ($this->hasTableColumn('murid', 'unity')) {
+            $unitySummary = $db->table('murid')
+                ->select('unity, COUNT(id) as total')
+                ->where('status', 'aktif')
+                ->where('unity IS NOT NULL', null, false)
+                ->where('unity <>', '')
+                ->groupBy('unity')
+                ->orderBy('unity', 'ASC')
+                ->get()
+                ->getResultArray();
+        }
+    } catch (\Throwable $e) {
+        log_message('error', 'Dashboard guru unity summary failed: {message}', ['message' => $e->getMessage()]);
+        $unitySummary = [];
     }
 
     // ==========================

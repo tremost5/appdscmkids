@@ -81,18 +81,14 @@ class BaseController extends Controller
 
         if ($exists === null || $exists === false) {
             try {
-                // Fallback for shared-host environments where metadata APIs can be inconsistent.
-                $dbName = (string) ($db->database ?? '');
-                $row = $db->table('information_schema.COLUMNS')
-                    ->select('COLUMN_NAME')
-                    ->where('TABLE_SCHEMA', $dbName)
-                    ->where('TABLE_NAME', $table)
-                    ->where('COLUMN_NAME', $column)
-                    ->get()
+                // Fallback query without bindings for LIKE (some drivers fail with placeholders here).
+                $safeTable = str_replace('`', '', $table);
+                $safeColumn = str_replace(["\\", "'"], ["\\\\", "\\'"], $column);
+                $row = $db->query("SHOW COLUMNS FROM `{$safeTable}` LIKE '{$safeColumn}'")
                     ->getRowArray();
                 $exists = !empty($row);
             } catch (\Throwable $e) {
-                log_message('error', 'information_schema column check failed: {message}', ['message' => $e->getMessage()]);
+                log_message('error', 'SHOW COLUMNS fallback failed: {message}', ['message' => $e->getMessage()]);
                 $exists = false;
             }
         }
