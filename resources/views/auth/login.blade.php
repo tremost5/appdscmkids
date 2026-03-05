@@ -191,7 +191,7 @@ body {
       </div>
       <div class="modal-body" id="pwaInstallBody">
         <span class="install-badge" id="pwaInstallBadge"><i class="fas fa-mobile-alt"></i> PWA</span>
-        <div class="install-copy" id="pwaInstallCopy">Tambahkan Presensi DSCM ke layar utama agar akses lebih cepat.</div>
+        <div class="install-copy" id="pwaInstallCopy">Tambahkan DSCMKIDS APP ke layar utama agar akses lebih cepat.</div>
         <ol class="install-steps" id="pwaInstallSteps"></ol>
         <div class="install-note" id="pwaInstallNote"></div>
       </div>

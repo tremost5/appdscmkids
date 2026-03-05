@@ -5,7 +5,7 @@
 
   <p>
     Terima kasih telah mendaftar sebagai guru di
-    <b>Sistem Presensi DSCM Kids</b>.
+    <b>Sistem DSCMKIDS APP</b>.
   </p>
 
   <p>

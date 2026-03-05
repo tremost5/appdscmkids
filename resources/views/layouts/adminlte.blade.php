@@ -154,7 +154,7 @@ if ($role == 2) { // ADMIN
 <!-- SIDEBAR -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
   <a href="<?= base_url($dashboardUrl) ?>" class="brand-link text-center">
-    <span class="brand-text font-weight-bold">PRESENSI DSCM</span>
+    <span class="brand-text font-weight-bold">DSCMKIDS APP</span>
   </a>
 
   <div class="sidebar">

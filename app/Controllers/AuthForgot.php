@@ -57,7 +57,7 @@ class AuthForgot extends BaseController
         try {
             Mail::raw($mailBody, function ($message) use ($email, $nama): void {
                 $message->to($email, $nama)
-                    ->subject('Reset Password - Presensi DSCM');
+                    ->subject('Reset Password - DSCMKIDS APP');
             });
         } catch (\Throwable $e) {
             log_message('error', 'Gagal kirim email reset password: ' . $e->getMessage());

@@ -45,7 +45,7 @@
     <!-- Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="/dashboard" class="brand-link">
-            <span class="brand-text font-weight-light">PRESENSI DSCM</span>
+            <span class="brand-text font-weight-light">DSCMKIDS APP</span>
         </a>
 
         <div class="sidebar">
