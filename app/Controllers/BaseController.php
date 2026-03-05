@@ -69,14 +69,32 @@ class BaseController extends Controller
             return $this->columnExistsCache[$key];
         }
 
+        $db = \Config\Database::connect();
+
         try {
-            $row = \Config\Database::connect()
-                ->query("SHOW COLUMNS FROM `{$table}` LIKE ?", [$column])
-                ->getRowArray();
-            $exists = !empty($row);
+            // Most portable in CI database layer.
+            $exists = $db->fieldExists($column, $table);
         } catch (\Throwable $e) {
-            log_message('error', $e->getMessage());
-            $exists = false;
+            log_message('error', 'fieldExists check failed: {message}', ['message' => $e->getMessage()]);
+            $exists = null;
+        }
+
+        if ($exists === null || $exists === false) {
+            try {
+                // Fallback for shared-host environments where metadata APIs can be inconsistent.
+                $dbName = (string) ($db->database ?? '');
+                $row = $db->table('information_schema.COLUMNS')
+                    ->select('COLUMN_NAME')
+                    ->where('TABLE_SCHEMA', $dbName)
+                    ->where('TABLE_NAME', $table)
+                    ->where('COLUMN_NAME', $column)
+                    ->get()
+                    ->getRowArray();
+                $exists = !empty($row);
+            } catch (\Throwable $e) {
+                log_message('error', 'information_schema column check failed: {message}', ['message' => $e->getMessage()]);
+                $exists = false;
+            }
         }
 
         $this->columnExistsCache[$key] = $exists;
