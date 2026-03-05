@@ -27,6 +27,7 @@ class AdminAbsensi extends BaseController
      * ===================================================== */
     public function range()
     {
+        $hasUnity = $this->hasTableColumn('murid', 'unity');
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
         $kelas = $this->request->getGet('kelas');
@@ -70,7 +71,7 @@ class AdminAbsensi extends BaseController
         if ($kelas) {
             $builder->where('m.kelas_id', $kelas);
         }
-        if ($unity !== '') {
+        if ($hasUnity && $unity !== '') {
             $builder->where('m.unity', $unity);
         }
 
@@ -94,6 +95,7 @@ class AdminAbsensi extends BaseController
      * ===================================================== */
     public function detailTanggal($tanggal)
     {
+        $hasUnity = $this->hasTableColumn('murid', 'unity');
         $kelas  = $this->request->getGet('kelas');
         $guru   = $this->request->getGet('guru');
         $lokasi = $this->request->getGet('lokasi');
@@ -113,7 +115,7 @@ class AdminAbsensi extends BaseController
                 m.nama_belakang,
                 m.panggilan,
                 m.kelas_id,
-                m.unity,
+                '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 a.jam,
                 a.lokasi_id,
                 u.nama_depan AS guru_depan,
@@ -137,7 +139,7 @@ class AdminAbsensi extends BaseController
         if ($lokasi) {
             $builder->where('a.lokasi_id', $lokasi);
         }
-        if ($unity !== '') {
+        if ($hasUnity && $unity !== '') {
             $builder->where('m.unity', $unity);
         }
 
@@ -178,6 +180,7 @@ class AdminAbsensi extends BaseController
      * ===================================================== */
     public function export($mode, $tanggal)
     {
+        $hasUnity = $this->hasTableColumn('murid', 'unity');
         $unity = trim((string) $this->request->getGet('unity'));
 
         $data = $this->db->table('absensi_detail ad')
@@ -186,7 +189,7 @@ class AdminAbsensi extends BaseController
                 m.nama_belakang,
                 m.panggilan,
                 m.kelas_id,
-                m.unity,
+                '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 k.nama_kelas,
                 a.jam,
                 a.lokasi_id,
@@ -202,7 +205,7 @@ class AdminAbsensi extends BaseController
             ->where('ad.status', 'hadir')
             ->where('a.tanggal', $tanggal);
 
-        if ($unity !== '') {
+        if ($hasUnity && $unity !== '') {
             $data->where('m.unity', $unity);
         }
 
@@ -257,6 +260,7 @@ class AdminAbsensi extends BaseController
      * ===================================================== */
     public function kelas()
     {
+        $hasUnity = $this->hasTableColumn('murid', 'unity');
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
         $kelas = $this->request->getGet('kelas');
@@ -302,7 +306,7 @@ class AdminAbsensi extends BaseController
         if ($kelas) {
             $builder->where('m.kelas_id', $kelas);
         }
-        if ($unity !== '') {
+        if ($hasUnity && $unity !== '') {
             $builder->where('m.unity', $unity);
         }
 
@@ -326,6 +330,7 @@ class AdminAbsensi extends BaseController
      * ===================================================== */
     public function kelasDetail()
     {
+        $hasUnity = $this->hasTableColumn('murid', 'unity');
         $kelas = $this->request->getGet('kelas');
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
@@ -350,7 +355,7 @@ class AdminAbsensi extends BaseController
                 m.nama_depan,
                 m.nama_belakang,
                 m.panggilan,
-                m.unity,
+                '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 a.jam,
                 li.nama_lokasi,
                 u.nama_depan AS guru_depan,
@@ -371,7 +376,7 @@ class AdminAbsensi extends BaseController
         if ($lokasi) {
             $builder->where('a.lokasi_id', $lokasi);
         }
-        if ($unity !== '') {
+        if ($hasUnity && $unity !== '') {
             $builder->where('m.unity', $unity);
         }
 

@@ -8,6 +8,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 class BaseController extends Controller
 {
     protected array $helpers = ['url', 'form', 'kelas'];
+    private array $columnExistsCache = [];
 
     // 🔥 GLOBAL DATA UNTUK VIEW (AMAN)
     protected array $globalViewData = [];
@@ -59,5 +60,26 @@ class BaseController extends Controller
                 $this->globalViewData['dobelHariIni'] = 0;
             }
         }
+    }
+
+    protected function hasTableColumn(string $table, string $column): bool
+    {
+        $key = strtolower($table . '.' . $column);
+        if (array_key_exists($key, $this->columnExistsCache)) {
+            return $this->columnExistsCache[$key];
+        }
+
+        try {
+            $row = \Config\Database::connect()
+                ->query("SHOW COLUMNS FROM `{$table}` LIKE ?", [$column])
+                ->getRowArray();
+            $exists = !empty($row);
+        } catch (\Throwable $e) {
+            log_message('error', $e->getMessage());
+            $exists = false;
+        }
+
+        $this->columnExistsCache[$key] = $exists;
+        return $exists;
     }
 }

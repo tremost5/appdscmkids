@@ -31,15 +31,18 @@ class Dashboard extends BaseController
             ->countAllResults();
 
         $total_murid = $db->table('murid')->countAllResults();
-        $unitySummary = $db->table('murid')
-            ->select('unity, COUNT(id) as total')
-            ->where('status', 'aktif')
-            ->where('unity IS NOT NULL', null, false)
-            ->where('unity <>', '')
-            ->groupBy('unity')
-            ->orderBy('unity', 'ASC')
-            ->get()
-            ->getResultArray();
+        $unitySummary = [];
+        if ($this->hasTableColumn('murid', 'unity')) {
+            $unitySummary = $db->table('murid')
+                ->select('unity, COUNT(id) as total')
+                ->where('status', 'aktif')
+                ->where('unity IS NOT NULL', null, false)
+                ->where('unity <>', '')
+                ->groupBy('unity')
+                ->orderBy('unity', 'ASC')
+                ->get()
+                ->getResultArray();
+        }
 
         // ===== GRAFIK HADIR MINGGU INI (GLOBAL) =====
         $weeklyRows = $db->table('absensi_detail')

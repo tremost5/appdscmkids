@@ -61,8 +61,9 @@ class Absensi extends BaseController
         $unity = trim((string) $this->request->getGet('unity'));
         $lokasi = (int) $this->request->getGet('lokasi');
         $kelasGroups = (array) $this->request->getGet('kelas');
+        $hasUnity = $this->hasTableColumn('murid', 'unity');
 
-        if ($unity === '' || !isset(unityMetaMap()[$unity]) || $lokasi <= 0) {
+        if (!$hasUnity || $unity === '' || !isset(unityMetaMap()[$unity]) || $lokasi <= 0) {
             return redirect()->to('guru/unity')->with('error', 'Unity dan lokasi wajib dipilih.');
         }
 
@@ -195,12 +196,13 @@ class Absensi extends BaseController
                 ]);
 
                 if ($status === 'dobel') {
+                    $unitySelect = $this->hasTableColumn('murid', 'unity') ? 'm.unity,' : "'' AS unity,";
                     $first = $this->db->table('absensi_detail d')
                         ->select("
                             m.nama_depan,
                             m.nama_belakang,
                             k.nama_kelas,
-                            m.unity,
+                            {$unitySelect}
                             a.lokasi_text,
                             a.jam,
                             CONCAT(u.nama_depan,' ',u.nama_belakang) AS guru_pertama
@@ -261,6 +263,7 @@ class Absensi extends BaseController
             ]);
         }
 
+        $unitySelect = $this->hasTableColumn('murid', 'unity') ? 'm.unity' : "'' AS unity";
         $detail = $this->db->table('absensi_detail d')
             ->select('
                 d.murid_id,
@@ -269,7 +272,7 @@ class Absensi extends BaseController
                 m.nama_belakang,
                 m.panggilan,
                 m.kelas_id,
-                m.unity,
+                '.$unitySelect.',
                 k.nama_kelas,
                 m.foto
             ')
@@ -391,15 +394,16 @@ class Absensi extends BaseController
 
     private function fetchMuridAktif(array $classIds, ?string $unity): array
     {
+        $hasUnity = $this->hasTableColumn('murid', 'unity');
         $builder = $this->db->table('murid')
-            ->select('id, nama_depan, nama_belakang, panggilan, kelas_id, status, foto, unity')
+            ->select('id, nama_depan, nama_belakang, panggilan, kelas_id, status, foto'.($hasUnity ? ', unity' : ", '' AS unity"))
             ->where('status', 'aktif');
 
         if (!empty($classIds)) {
             $builder->whereIn('kelas_id', $classIds);
         }
 
-        if (!empty($unity)) {
+        if ($hasUnity && !empty($unity)) {
             $builder->where('unity', $unity);
         }
 

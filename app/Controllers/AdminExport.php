@@ -34,13 +34,14 @@ class AdminExport extends BaseController
 
     private function exportRange($start, $end, $label)
     {
+        $hasUnity = $this->hasTableColumn('murid', 'unity');
         $rows = $this->db->table('absensi_detail ad')
             ->select('
                 a.tanggal,
                 m.nama_depan,
                 m.nama_belakang,
                 m.panggilan,
-                m.unity,
+                '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 k.nama_kelas,
                 a.jam,
                 li.nama_lokasi,
