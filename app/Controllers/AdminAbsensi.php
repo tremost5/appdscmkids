@@ -118,12 +118,14 @@ class AdminAbsensi extends BaseController
                 '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 a.jam,
                 a.lokasi_id,
+                li.nama_lokasi,
                 u.nama_depan AS guru_depan,
                 u.nama_belakang AS guru_belakang,
                 COUNT(ad.murid_id) OVER (PARTITION BY ad.murid_id) AS dobel
             ')
             ->join('absensi a', 'a.id = ad.absensi_id')
             ->join('murid m', 'm.id = ad.murid_id')
+            ->join('lokasi_ibadah li', 'li.id = a.lokasi_id', 'left')
             ->join('users u', 'u.id = a.guru_id', 'left')
             ->where('a.tanggal', $tanggal)
             ->where('ad.status', 'hadir');

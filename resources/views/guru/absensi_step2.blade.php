@@ -42,6 +42,9 @@ body.murid-preview-open{overflow:hidden}
     <?php if (!empty($activeUnity)): ?>
       <div class="mt-2"><?= unityBadge($activeUnity) ?> <strong><?= esc($activeUnity) ?></strong></div>
     <?php endif; ?>
+    <?php if (!empty($jamPreset)): ?>
+      <div class="mt-1">⏰ Jadwal: <strong><?= esc(substr((string)$jamPreset, 0, 5)) ?></strong></div>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -51,6 +54,7 @@ body.murid-preview-open{overflow:hidden}
       enctype="multipart/form-data">
 <?= csrf_field() ?>
 <input type="hidden" name="lokasi_id" value="<?= (int)$lokasi_id ?>">
+<input type="hidden" name="jam_preset" value="<?= esc($jamPreset ?? '') ?>">
 
 <div class="mb-3">
   <input type="text" id="searchMurid" class="form-control" placeholder="🔍 Cari murid...">

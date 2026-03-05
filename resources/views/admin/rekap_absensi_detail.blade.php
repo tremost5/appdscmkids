@@ -56,7 +56,7 @@
     <div class="small text-muted mt-1">
       <?= unityBadge($r['unity'] ?? '') ?> <?= esc($r['unity'] ?? '-') ?><br>
       🕒 <?= esc($r['jam']) ?> |
-      📍 <?= esc($r['lokasi_id']) ?><br>
+      📍 <?= esc($r['nama_lokasi'] ?? '-') ?><br>
       👨‍🏫 <?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?>
     </div>
   </div>
@@ -84,7 +84,7 @@
   <td><?= esc($r['kelas_id']) ?></td>
   <td><?= unityBadge($r['unity'] ?? '') ?> <?= esc($r['unity'] ?? '-') ?></td>
   <td><?= esc($r['jam']) ?></td>
-  <td><?= esc($r['lokasi_id']) ?></td>
+  <td><?= esc($r['nama_lokasi'] ?? '-') ?></td>
   <td><?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?></td>
   <td>
     <?php if ($r['dobel'] > 1): ?>

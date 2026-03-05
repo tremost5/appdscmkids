@@ -9,7 +9,7 @@ $mapKelas = [
 ];
 
 $mapLokasi = [
-  1=>'NICC',2=>'GRASA',3=>'CPM'
+  1=>'NICC',2=>'GRASA',3=>'CPM',4=>'Online'
 ];
 ?>
 

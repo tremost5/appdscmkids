@@ -10,11 +10,11 @@ $guru    = $guru    ?? '';
 $mapKelas = [
     1=>'PG',2=>'TKA',3=>'TKB',
     4=>'1',5=>'2',6=>'3',
-    7=>'4',8=>'5',9=>'6'
+    7=>'4',8=>'5',9=>'6',11=>'TR'
 ];
 
 $mapLokasi = [
-    1=>'NICC',2=>'GRASA',3=>'CPM'
+    1=>'NICC',2=>'GRASA',3=>'CPM',4=>'Online'
 ];
 
 /* GROUP DATA PER KELAS */

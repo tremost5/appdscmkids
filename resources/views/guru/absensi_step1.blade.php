@@ -69,9 +69,19 @@
   <strong class="d-block mb-2">Lokasi</strong>
   <select name="lokasi" id="lokasi" class="form-control">
     <option value="">-- pilih lokasi --</option>
-    <option value="1">NICC</option>
-    <option value="2">GRASA</option>
-    <option value="3">CPM</option>
+    <?php foreach (($lokasiOptions ?? []) as $l): ?>
+      <option value="<?= (int) $l['id'] ?>"><?= esc($l['nama_lokasi']) ?></option>
+    <?php endforeach; ?>
+  </select>
+</div>
+
+<div class="mb-4">
+  <strong class="d-block mb-2">Jadwal</strong>
+  <select name="jam_preset" id="jam_preset" class="form-control">
+    <option value="">-- pilih jadwal --</option>
+    <?php foreach (($jamOptions ?? []) as $val => $label): ?>
+      <option value="<?= esc($val) ?>"><?= esc($label) ?></option>
+    <?php endforeach; ?>
   </select>
 </div>
 
@@ -91,8 +101,9 @@
 <script>
 function validateForm(){
   if(!document.querySelector('input[name="kelas[]"]:checked') ||
-     !document.getElementById('lokasi').value){
-    alert('Kelas dan lokasi wajib dipilih');
+     !document.getElementById('lokasi').value ||
+     !document.getElementById('jam_preset').value){
+    alert('Kelas, lokasi, dan jadwal wajib dipilih');
     return false;
   }
   return true;

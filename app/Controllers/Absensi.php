@@ -16,16 +16,36 @@ class Absensi extends BaseController
 
     public function step1()
     {
+        $lokasiOptions = $this->db->table('lokasi_ibadah')
+            ->select('id, nama_lokasi')
+            ->orderBy('nama_lokasi', 'ASC')
+            ->get()->getResultArray();
+
         return view('guru/absensi_step1', [
             'kelasGroups' => kelasGroupMap(),
+            'lokasiOptions' => $lokasiOptions,
+            'jamOptions' => [
+                '08:00:00' => '08:00 AM',
+                '10:00:00' => '10:00 AM',
+            ],
         ]);
     }
 
     public function unityStep1()
     {
+        $lokasiOptions = $this->db->table('lokasi_ibadah')
+            ->select('id, nama_lokasi')
+            ->orderBy('nama_lokasi', 'ASC')
+            ->get()->getResultArray();
+
         return view('guru/unity_step1', [
             'kelasGroups' => kelasGroupMap(),
             'unityMap' => unityMetaMap(),
+            'lokasiOptions' => $lokasiOptions,
+            'jamOptions' => [
+                '08:00:00' => '08:00 AM',
+                '10:00:00' => '10:00 AM',
+            ],
         ]);
     }
 
@@ -33,9 +53,11 @@ class Absensi extends BaseController
     {
         $kelasGroups = (array) $this->request->getGet('kelas');
         $lokasi = (int) $this->request->getGet('lokasi');
+        $jamPreset = trim((string) $this->request->getGet('jam_preset'));
+        $allowedJam = ['08:00:00', '10:00:00'];
 
-        if (empty($kelasGroups) || $lokasi <= 0) {
-            return redirect()->to('guru/absensi')->with('error', 'Kelas dan lokasi wajib dipilih.');
+        if (empty($kelasGroups) || $lokasi <= 0 || !in_array($jamPreset, $allowedJam, true)) {
+            return redirect()->to('guru/absensi')->with('error', 'Kelas, lokasi, dan jadwal wajib dipilih.');
         }
 
         $resolved = $this->resolveClassIdsByGroupKeys($kelasGroups);
@@ -53,6 +75,7 @@ class Absensi extends BaseController
             'modeTitle' => 'FORM PRESENSI',
             'modeSubtitle' => 'Pastikan data benar sebelum menyimpan',
             'activeUnity' => '',
+            'jamPreset' => $jamPreset,
         ]);
     }
 
@@ -62,9 +85,11 @@ class Absensi extends BaseController
         $lokasi = (int) $this->request->getGet('lokasi');
         $kelasGroups = (array) $this->request->getGet('kelas');
         $hasUnity = $this->hasTableColumn('murid', 'unity');
+        $jamPreset = trim((string) $this->request->getGet('jam_preset'));
+        $allowedJam = ['08:00:00', '10:00:00'];
 
-        if (!$hasUnity || $unity === '' || !isset(unityMetaMap()[$unity]) || $lokasi <= 0) {
-            return redirect()->to('guru/unity')->with('error', 'Unity dan lokasi wajib dipilih.');
+        if (!$hasUnity || $unity === '' || !isset(unityMetaMap()[$unity]) || $lokasi <= 0 || !in_array($jamPreset, $allowedJam, true)) {
+            return redirect()->to('guru/unity')->with('error', 'Unity, lokasi, dan jadwal wajib dipilih.');
         }
 
         $classIds = [];
@@ -92,6 +117,7 @@ class Absensi extends BaseController
             'modeTitle' => 'FORM PRESENSI UNITY',
             'modeSubtitle' => 'Presensi khusus murid berdasarkan Unity',
             'activeUnity' => $unity,
+            'jamPreset' => $jamPreset,
         ]);
     }
 
@@ -117,7 +143,9 @@ class Absensi extends BaseController
     {
         try {
             $tanggal = date('Y-m-d');
-            $jam = date('H:i:s');
+            $jamInput = trim((string) $this->request->getPost('jam_preset'));
+            $allowedJam = ['08:00:00', '10:00:00'];
+            $jam = in_array($jamInput, $allowedJam, true) ? $jamInput : date('H:i:s');
             $guruId = session('user_id');
             $guruNama = trim(session('nama_depan') . ' ' . session('nama_belakang'));
             $lokasiId = (int) $this->request->getPost('lokasi_id');
