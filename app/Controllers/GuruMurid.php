@@ -8,6 +8,8 @@ use App\Models\MuridModel;
 class GuruMurid extends BaseController
 {
     private const UNITY_OPTIONS = ['Unity Peter', 'Unity David', 'Unity Samuel', 'Unity Joshua'];
+    private ?bool $hasGerejaAsalColumn = null;
+    private ?bool $hasUnityColumn = null;
 
     protected $muridModel;
     protected $db;
@@ -101,8 +103,6 @@ class GuruMurid extends BaseController
             'nama_depan'    => $this->request->getPost('nama_depan'),
             'nama_belakang' => $this->request->getPost('nama_belakang'),
             'panggilan'     => $this->request->getPost('panggilan'),
-            'gereja_asal'   => $this->request->getPost('gereja_asal'),
-            'unity'         => $unity,
             'kelas_id'      => $this->request->getPost('kelas_id'),
             'jenis_kelamin' => $this->request->getPost('jenis_kelamin'),
             'tanggal_lahir' => $this->request->getPost('tanggal_lahir'),
@@ -110,6 +110,12 @@ class GuruMurid extends BaseController
             'no_hp'         => $noHp,
             'status'        => 'aktif'
         ];
+        if ($this->hasMuridColumn('gereja_asal')) {
+            $data['gereja_asal'] = $this->request->getPost('gereja_asal');
+        }
+        if ($this->hasMuridColumn('unity')) {
+            $data['unity'] = $unity;
+        }
 
         $foto = $this->request->getFile('foto');
         if ($foto && $foto->isValid() && !$foto->hasMoved()) {
@@ -167,14 +173,18 @@ class GuruMurid extends BaseController
             'nama_depan'    => $this->request->getPost('nama_depan'),
             'nama_belakang' => $this->request->getPost('nama_belakang'),
             'panggilan'     => $this->request->getPost('panggilan'),
-            'gereja_asal'   => $this->request->getPost('gereja_asal'),
-            'unity'         => $unity,
             'kelas_id'      => $this->request->getPost('kelas_id'),
             'jenis_kelamin' => $this->request->getPost('jenis_kelamin'),
             'tanggal_lahir' => $this->request->getPost('tanggal_lahir'),
             'alamat'        => $this->request->getPost('alamat'),
             'no_hp'         => $noHp,
         ];
+        if ($this->hasMuridColumn('gereja_asal')) {
+            $data['gereja_asal'] = $this->request->getPost('gereja_asal');
+        }
+        if ($this->hasMuridColumn('unity')) {
+            $data['unity'] = $unity;
+        }
 
         $foto = $this->request->getFile('foto');
         if ($foto && $foto->isValid() && !$foto->hasMoved()) {
@@ -231,5 +241,26 @@ class GuruMurid extends BaseController
         }
 
         return in_array($value, self::UNITY_OPTIONS, true) ? $value : null;
+    }
+
+    private function hasMuridColumn(string $column): bool
+    {
+        if ($column === 'gereja_asal' && $this->hasGerejaAsalColumn !== null) {
+            return $this->hasGerejaAsalColumn;
+        }
+        if ($column === 'unity' && $this->hasUnityColumn !== null) {
+            return $this->hasUnityColumn;
+        }
+
+        $result = $this->db->query("SHOW COLUMNS FROM murid LIKE ?", [$column])->getRowArray();
+        $exists = !empty($result);
+
+        if ($column === 'gereja_asal') {
+            $this->hasGerejaAsalColumn = $exists;
+        } elseif ($column === 'unity') {
+            $this->hasUnityColumn = $exists;
+        }
+
+        return $exists;
     }
 }
