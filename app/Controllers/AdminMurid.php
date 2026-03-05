@@ -115,6 +115,8 @@ class AdminMurid extends BaseController
             $data['unity'] = $this->sanitizeUnity($this->request->getPost('unity'));
         }
 
+        $hasChanges = $this->hasDataChanges($murid, $data);
+
         $foto = $this->request->getFile('foto');
         if ($foto && $foto->isValid() && !$foto->hasMoved()) {
             $uploadDir = FCPATH . 'uploads/murid';
@@ -124,9 +126,20 @@ class AdminMurid extends BaseController
             $namaFoto = $foto->getRandomName();
             $foto->move($uploadDir, $namaFoto);
             $data['foto'] = $namaFoto;
+            $hasChanges = true;
         }
 
-        $this->db->table('murid')->where('id', (int) $id)->update($data);
+        if (!$hasChanges) {
+            return redirect()->back()->with('warning', 'Tidak ada perubahan data.');
+        }
+
+        $updated = $this->db->table('murid')->where('id', (int) $id)->update($data);
+        if ($updated !== true) {
+            $dbError = $this->db->error();
+            $errMsg = !empty($dbError['message']) ? $dbError['message'] : 'Update gagal di database.';
+            log_message('error', 'Gagal update murid id {id}: {msg}', ['id' => $id, 'msg' => $errMsg]);
+            return redirect()->back()->withInput()->with('error', 'Gagal simpan perubahan: '.$errMsg);
+        }
 
         return redirect()->to($this->resolveMuridListUrl())
             ->with('success', 'Data murid berhasil diperbarui.');
@@ -286,5 +299,17 @@ class AdminMurid extends BaseController
         }
 
         return '/admin/murid';
+    }
+
+    private function hasDataChanges(array $old, array $new): bool
+    {
+        foreach ($new as $key => $value) {
+            $oldValue = $old[$key] ?? null;
+            if ((string) $oldValue !== (string) $value) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

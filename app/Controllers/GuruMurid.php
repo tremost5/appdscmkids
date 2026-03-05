@@ -201,14 +201,28 @@ class GuruMurid extends BaseController
             $data['unity'] = $unity;
         }
 
+        $hasChanges = $this->hasDataChanges($old, $data);
+
         $foto = $this->request->getFile('foto');
         if ($foto && $foto->isValid() && !$foto->hasMoved()) {
             $namaFoto = $foto->getRandomName();
             $foto->move(FCPATH.'uploads/murid', $namaFoto);
             $data['foto'] = $namaFoto;
+            $hasChanges = true;
         }
 
-        $this->muridModel->update($id, $data);
+        if (!$hasChanges) {
+            return redirect()->to('guru/murid?highlight='.$id)
+                ->with('warning', 'Tidak ada perubahan data');
+        }
+
+        $updated = $this->muridModel->update($id, $data);
+        if ($updated !== true) {
+            $dbError = $this->db->error();
+            $errMsg = !empty($dbError['message']) ? $dbError['message'] : 'Update gagal di database.';
+            log_message('error', 'Gagal update murid id {id}: {msg}', ['id' => $id, 'msg' => $errMsg]);
+            return redirect()->back()->withInput()->with('error', 'Gagal simpan perubahan: '.$errMsg);
+        }
 
         // ✅ AUDIT
         logAudit(
@@ -276,5 +290,17 @@ class GuruMurid extends BaseController
         }
 
         return $exists;
+    }
+
+    private function hasDataChanges(array $old, array $new): bool
+    {
+        foreach ($new as $key => $value) {
+            $oldValue = $old[$key] ?? null;
+            if ((string) $oldValue !== (string) $value) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
