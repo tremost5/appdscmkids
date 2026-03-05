@@ -237,11 +237,6 @@
         Login terakhir:
         <?= !empty($guru['last_login']) ? date('d M Y H:i', strtotime($guru['last_login'])) : '-' ?>
       </small>
-      <div class="mt-2 d-flex flex-wrap" style="gap:8px">
-        <a class="btn btn-sm <?= (($mode ?? 'all')==='all')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/guru?mode=all') ?>">Semua</a>
-        <a class="btn btn-sm <?= (($mode ?? '')==='reguler')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/guru?mode=reguler') ?>">Reguler</a>
-        <a class="btn btn-sm <?= (($mode ?? '')==='unity')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/guru?mode=unity') ?>">Unity</a>
-      </div>
     </div>
 
     <div class="kpi-grid">
@@ -251,6 +246,7 @@
           <span class="kpi-icon"><i class="fas fa-user-check"></i></span>
         </div>
         <div class="value"><?= (int) ($todayCount ?? 0) ?></div>
+        <div class="chart-sub">Unity: <?= (int) ($todayUnityCount ?? 0) ?></div>
       </div>
       <div class="kpi-card kpi-card--week">
         <div class="kpi-top">
@@ -258,6 +254,7 @@
           <span class="kpi-icon"><i class="fas fa-calendar-week"></i></span>
         </div>
         <div class="value"><?= (int) ($weeklyTotal ?? 0) ?></div>
+        <div class="chart-sub">Unity: <?= (int) ($weeklyUnityTotal ?? 0) ?></div>
       </div>
       <div class="kpi-card kpi-card--month">
         <div class="kpi-top">
@@ -265,6 +262,7 @@
           <span class="kpi-icon"><i class="fas fa-calendar-alt"></i></span>
         </div>
         <div class="value"><?= (int) ($monthlyTotal ?? 0) ?></div>
+        <div class="chart-sub">Unity: <?= (int) ($monthlyUnityTotal ?? 0) ?></div>
       </div>
       <div class="kpi-card kpi-card--avg">
         <div class="kpi-top">
@@ -278,7 +276,7 @@
     <div class="panel-grid">
       <div class="chart-card">
         <h6 class="card-head"><span class="head-icon head-icon--week"><i class="fas fa-chart-line"></i></span>Grafik Kehadiran Minggu Ini</h6>
-        <div class="chart-sub">Total murid status hadir per hari (7 hari terakhir)</div>
+        <div class="chart-sub">Gabungan vs Unity (7 hari terakhir)</div>
         <div class="chart-wrap"><canvas id="chartWeekly"></canvas></div>
       </div>
 
@@ -347,7 +345,7 @@
         </div>
 
         <div class="chart-card">
-          <h6 class="card-head"><span class="head-icon head-icon--week"><i class="fas fa-star"></i></span>Distribusi Unity Aktif</h6>
+          <h6 class="card-head"><span class="head-icon head-icon--week"><i class="fas fa-star"></i></span>Jumlah Murid Aktif per Unity</h6>
           <?php if (empty($unitySummary)): ?>
             <div class="chart-sub mt-2">Belum ada data unity.</div>
           <?php else: ?>
@@ -363,7 +361,7 @@
 
     <div class="chart-card">
       <h6 class="card-head"><span class="head-icon head-icon--month"><i class="fas fa-chart-bar"></i></span>Grafik Kehadiran Bulan Ini</h6>
-      <div class="chart-sub">Distribusi jumlah hadir harian dari tanggal 1 sampai hari ini</div>
+      <div class="chart-sub">Gabungan vs Unity dari tanggal 1 sampai hari ini</div>
       <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
     </div>
 
@@ -417,8 +415,10 @@
 document.addEventListener('DOMContentLoaded', () => {
   const weeklyLabels = @json($weeklyLabels ?? []);
   const weeklyData = @json($weeklyData ?? []);
+  const weeklyUnityData = @json($weeklyUnityData ?? []);
   const monthlyLabels = @json($monthlyLabels ?? []);
   const monthlyData = @json($monthlyData ?? []);
+  const monthlyUnityData = @json($monthlyUnityData ?? []);
 
   const commonGrid = {
     color: 'rgba(148,163,184,.25)',
@@ -440,12 +440,22 @@ document.addEventListener('DOMContentLoaded', () => {
         pointBackgroundColor: '#0f766e',
         fill: true,
         backgroundColor: 'rgba(15,118,110,.14)'
+      },{
+        label: 'Unity',
+        data: weeklyUnityData,
+        tension: 0.35,
+        borderWidth: 2,
+        borderColor: '#7c3aed',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#7c3aed',
+        fill: false
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: true } },
       scales: {
         x: { grid: { display: false }, ticks: { color: '#64748b' } },
         y: { beginAtZero: true, ticks: { precision: 0, color: '#64748b' }, grid: commonGrid }
@@ -464,12 +474,19 @@ document.addEventListener('DOMContentLoaded', () => {
         backgroundColor: 'rgba(14,165,233,.78)',
         borderColor: '#0284c7',
         borderWidth: 1.2
+      },{
+        label: 'Unity',
+        data: monthlyUnityData,
+        borderRadius: 8,
+        backgroundColor: 'rgba(124,58,237,.65)',
+        borderColor: '#7c3aed',
+        borderWidth: 1.2
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: true } },
       scales: {
         x: { ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, maxTicksLimit: 16 }, grid: { display: false } },
         y: { beginAtZero: true, ticks: { precision: 0, color: '#64748b' }, grid: commonGrid }

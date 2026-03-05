@@ -120,11 +120,6 @@
     <div class="admin-hero">
       <h3>Dashboard Admin</h3>
       <small>Kontrol aktivitas guru, presensi, dan monitoring operasional harian.</small>
-      <div class="mt-2 d-flex flex-wrap" style="gap:8px">
-        <a class="btn btn-sm <?= (($mode ?? 'all')==='all')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/admin?mode=all') ?>">Semua</a>
-        <a class="btn btn-sm <?= (($mode ?? '')==='reguler')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/admin?mode=reguler') ?>">Reguler</a>
-        <a class="btn btn-sm <?= (($mode ?? '')==='unity')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/admin?mode=unity') ?>">Unity</a>
-      </div>
     </div>
 
     <div id="alert-absensi-dobel" class="alert alert-danger mb-0 <?= (int) ($dobelHariIni ?? 0) > 0 ? '' : 'd-none' ?>">
@@ -159,17 +154,19 @@
       <div class="kpi-card">
         <div class="label">Hadir Hari Ini</div>
         <div class="value"><?= (int) ($todayHadir ?? 0) ?></div>
+        <div class="chart-sub">Unity: <?= (int) ($todayHadirUnity ?? 0) ?></div>
       </div>
       <div class="kpi-card">
         <div class="label">Avg Hadir / Hari</div>
         <div class="value"><?= esc((string) ($avgHarian ?? 0)) ?></div>
+        <div class="chart-sub">Minggu Unity: <?= (int) ($totalHadirMingguUnity ?? 0) ?></div>
       </div>
     </div>
 
     <div class="panel-grid">
       <div class="chart-card">
         <h6>Grafik Kehadiran Minggu Ini</h6>
-        <div class="chart-sub">Total status hadir seluruh kelas per hari (7 hari terakhir)</div>
+        <div class="chart-sub">Gabungan vs Unity (7 hari terakhir)</div>
         <div class="chart-wrap"><canvas id="chartAdminWeekly"></canvas></div>
       </div>
 
@@ -193,7 +190,7 @@
             <div class="chart-sub"><?= (int) ($dobelHariIni ?? 0) ?> data belum resolve</div>
           </div>
           <div class="list-item">
-            <strong>Distribusi Unity Aktif</strong>
+            <strong>Jumlah Murid Aktif per Unity</strong>
             <?php if (empty($unitySummary)): ?>
               <div class="chart-sub">Belum ada data unity.</div>
             <?php else: ?>
@@ -244,7 +241,7 @@
     <div class="panel-grid">
       <div class="chart-card">
         <h6>Grafik Kehadiran Bulan Ini</h6>
-        <div class="chart-sub">Distribusi jumlah hadir dari tanggal 1 hingga hari ini</div>
+        <div class="chart-sub">Gabungan vs Unity dari tanggal 1 hingga hari ini</div>
         <div class="chart-wrap"><canvas id="chartAdminMonthly"></canvas></div>
       </div>
 
@@ -312,8 +309,10 @@
 <script>
 const adminWeeklyLabels = @json($weeklyLabels ?? []);
 const adminWeeklyData = @json($weeklyData ?? []);
+const adminWeeklyUnityData = @json($weeklyUnityData ?? []);
 const adminMonthlyLabels = @json($monthlyLabels ?? []);
 const adminMonthlyData = @json($monthlyData ?? []);
+const adminMonthlyUnityData = @json($monthlyUnityData ?? []);
 
 const adminGrid = { color: 'rgba(148,163,184,.25)', drawTicks: false };
 
@@ -356,6 +355,7 @@ new Chart(document.getElementById('chartAdminWeekly'), {
   data: {
     labels: adminWeeklyLabels,
     datasets: [{
+      label: 'Gabungan',
       data: adminWeeklyData,
       borderColor: '#0284c7',
       backgroundColor: 'rgba(2,132,199,.14)',
@@ -364,12 +364,22 @@ new Chart(document.getElementById('chartAdminWeekly'), {
       pointRadius: 4,
       pointHoverRadius: 6,
       fill: true
+    },{
+      label: 'Unity',
+      data: adminWeeklyUnityData,
+      borderColor: '#7c3aed',
+      backgroundColor: 'rgba(124,58,237,.08)',
+      borderWidth: 2,
+      tension: 0.35,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      fill: false
     }]
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: { legend: { display: true } },
     scales: {
       x: { grid: { display: false }, ticks: { color: '#64748b' } },
       y: { beginAtZero: true, ticks: { precision: 0, color: '#64748b' }, grid: adminGrid }
@@ -382,17 +392,25 @@ new Chart(document.getElementById('chartAdminMonthly'), {
   data: {
     labels: adminMonthlyLabels,
     datasets: [{
+      label: 'Gabungan',
       data: adminMonthlyData,
       borderRadius: 8,
       backgroundColor: 'rgba(15,118,110,.8)',
       borderColor: '#0f766e',
+      borderWidth: 1
+    },{
+      label: 'Unity',
+      data: adminMonthlyUnityData,
+      borderRadius: 8,
+      backgroundColor: 'rgba(124,58,237,.65)',
+      borderColor: '#7c3aed',
       borderWidth: 1
     }]
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: { legend: { display: true } },
     scales: {
       x: { grid: { display: false }, ticks: { color: '#64748b', maxTicksLimit: 16 } },
       y: { beginAtZero: true, ticks: { precision: 0, color: '#64748b' }, grid: adminGrid }

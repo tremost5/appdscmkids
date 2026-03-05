@@ -55,7 +55,6 @@ public function guru()
     $db        = \Config\Database::connect();
     $userModel = new \App\Models\UserModel();
     $muridModel = new \App\Models\MuridModel();
-    $mode = $this->resolvePresensiMode($this->request->getGet('mode'));
     $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
 
     // ==========================
@@ -109,9 +108,6 @@ public function guru()
           AND MONTH(absn.tanggal) = MONTH(CURDATE())
           AND YEAR(absn.tanggal) = YEAR(CURDATE())
     ";
-    if ($hasJenisPresensi && $mode !== 'all') {
-        $rankingSql .= " AND absn.jenis_presensi = ".$db->escape($mode)." ";
-    }
     $rankingSql .= "
         GROUP BY m.id, m.nama_depan, m.nama_belakang, m.foto
         ORDER BY total_hadir DESC
@@ -140,9 +136,6 @@ public function guru()
         ->where('d.status', 'hadir')
         ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
         ->where('a.tanggal <=', date('Y-m-d'));
-    if ($hasJenisPresensi && $mode !== 'all') {
-        $weeklyRows->where('a.jenis_presensi', $mode);
-    }
     $weeklyRows = $weeklyRows
         ->groupBy('a.tanggal')
         ->orderBy('a.tanggal', 'ASC')
@@ -156,10 +149,30 @@ public function guru()
 
     $weeklyLabels = [];
     $weeklyData = [];
+    $weeklyUnityMap = [];
+    if ($hasJenisPresensi) {
+        $weeklyUnityRows = $db->table('absensi_detail d')
+            ->select('a.tanggal, COUNT(d.id) as total')
+            ->join('absensi a', 'a.id = d.absensi_id', 'inner')
+            ->where('a.guru_id', $userId)
+            ->where('d.status', 'hadir')
+            ->where('a.jenis_presensi', 'unity')
+            ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
+            ->where('a.tanggal <=', date('Y-m-d'))
+            ->groupBy('a.tanggal')
+            ->orderBy('a.tanggal', 'ASC')
+            ->get()
+            ->getResultArray();
+        foreach ($weeklyUnityRows as $row) {
+            $weeklyUnityMap[$row['tanggal']] = (int) $row['total'];
+        }
+    }
+    $weeklyUnityData = [];
     for ($i = 6; $i >= 0; $i--) {
         $date = date('Y-m-d', strtotime("-{$i} days"));
         $weeklyLabels[] = date('D', strtotime($date));
         $weeklyData[] = $weeklyMap[$date] ?? 0;
+        $weeklyUnityData[] = $weeklyUnityMap[$date] ?? 0;
     }
 
     // ==========================
@@ -175,9 +188,6 @@ public function guru()
         ->where('d.status', 'hadir')
         ->where('a.tanggal >=', $monthStart)
         ->where('a.tanggal <=', $today);
-    if ($hasJenisPresensi && $mode !== 'all') {
-        $monthlyRows->where('a.jenis_presensi', $mode);
-    }
     $monthlyRows = $monthlyRows
         ->groupBy('a.tanggal')
         ->orderBy('a.tanggal', 'ASC')
@@ -191,16 +201,39 @@ public function guru()
 
     $monthlyLabels = [];
     $monthlyData = [];
+    $monthlyUnityMap = [];
+    if ($hasJenisPresensi) {
+        $monthlyUnityRows = $db->table('absensi_detail d')
+            ->select('a.tanggal, COUNT(d.id) as total')
+            ->join('absensi a', 'a.id = d.absensi_id', 'inner')
+            ->where('a.guru_id', $userId)
+            ->where('d.status', 'hadir')
+            ->where('a.jenis_presensi', 'unity')
+            ->where('a.tanggal >=', $monthStart)
+            ->where('a.tanggal <=', $today)
+            ->groupBy('a.tanggal')
+            ->orderBy('a.tanggal', 'ASC')
+            ->get()
+            ->getResultArray();
+        foreach ($monthlyUnityRows as $row) {
+            $monthlyUnityMap[$row['tanggal']] = (int) $row['total'];
+        }
+    }
+    $monthlyUnityData = [];
     $daysInRange = (int) date('j');
     for ($d = 1; $d <= $daysInRange; $d++) {
         $date = date('Y-m-') . str_pad((string) $d, 2, '0', STR_PAD_LEFT);
         $monthlyLabels[] = (string) $d;
         $monthlyData[] = $monthlyMap[$date] ?? 0;
+        $monthlyUnityData[] = $monthlyUnityMap[$date] ?? 0;
     }
 
     $todayCount = $weeklyData[6] ?? 0;
+    $todayUnityCount = $weeklyUnityData[6] ?? 0;
     $weeklyTotal = array_sum($weeklyData);
+    $weeklyUnityTotal = array_sum($weeklyUnityData);
     $monthlyTotal = array_sum($monthlyData);
+    $monthlyUnityTotal = array_sum($monthlyUnityData);
     $avgWeekly = $weeklyTotal > 0 ? round($weeklyTotal / 7, 1) : 0;
 
     $unitySummary = [];
@@ -258,14 +291,18 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
         'templateWaUltah' => $templateWaUltah,
         'weeklyLabels'    => $weeklyLabels,
         'weeklyData'      => $weeklyData,
+        'weeklyUnityData' => $weeklyUnityData,
         'monthlyLabels'   => $monthlyLabels,
         'monthlyData'     => $monthlyData,
+        'monthlyUnityData'=> $monthlyUnityData,
         'todayCount'      => $todayCount,
+        'todayUnityCount' => $todayUnityCount,
         'weeklyTotal'     => $weeklyTotal,
+        'weeklyUnityTotal'=> $weeklyUnityTotal,
         'monthlyTotal'    => $monthlyTotal,
+        'monthlyUnityTotal'=> $monthlyUnityTotal,
         'avgWeekly'       => $avgWeekly,
         'unitySummary'    => $unitySummary,
-        'mode'            => $mode,
     ]);
 }
 
@@ -277,7 +314,6 @@ public function admin()
 {
     $now = time();
     $today = date('Y-m-d');
-    $mode = $this->resolvePresensiMode($this->request->getGet('mode'));
     $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
 
     /* ===============================
@@ -380,9 +416,6 @@ public function admin()
         ->where('ad.status', 'hadir')
         ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
         ->where('a.tanggal <=', $today);
-    if ($hasJenisPresensi && $mode !== 'all') {
-        $weeklyRows->where('a.jenis_presensi', $mode);
-    }
     $weeklyRows = $weeklyRows
         ->groupBy('a.tanggal')
         ->orderBy('a.tanggal', 'ASC')
@@ -396,10 +429,29 @@ public function admin()
 
     $weeklyLabels = [];
     $weeklyData = [];
+    $weeklyUnityMap = [];
+    if ($hasJenisPresensi) {
+        $weeklyUnityRows = $this->db->table('absensi_detail ad')
+            ->select('a.tanggal, COUNT(ad.id) as total')
+            ->join('absensi a', 'a.id = ad.absensi_id')
+            ->where('ad.status', 'hadir')
+            ->where('a.jenis_presensi', 'unity')
+            ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
+            ->where('a.tanggal <=', $today)
+            ->groupBy('a.tanggal')
+            ->orderBy('a.tanggal', 'ASC')
+            ->get()
+            ->getResultArray();
+        foreach ($weeklyUnityRows as $row) {
+            $weeklyUnityMap[$row['tanggal']] = (int) $row['total'];
+        }
+    }
+    $weeklyUnityData = [];
     for ($i = 6; $i >= 0; $i--) {
         $date = date('Y-m-d', strtotime("-{$i} days"));
         $weeklyLabels[] = date('D', strtotime($date));
         $weeklyData[] = $weeklyMap[$date] ?? 0;
+        $weeklyUnityData[] = $weeklyUnityMap[$date] ?? 0;
     }
 
     /* ===============================
@@ -412,9 +464,6 @@ public function admin()
         ->where('ad.status', 'hadir')
         ->where('a.tanggal >=', $monthStart)
         ->where('a.tanggal <=', $today);
-    if ($hasJenisPresensi && $mode !== 'all') {
-        $monthlyRows->where('a.jenis_presensi', $mode);
-    }
     $monthlyRows = $monthlyRows
         ->groupBy('a.tanggal')
         ->orderBy('a.tanggal', 'ASC')
@@ -428,16 +477,38 @@ public function admin()
 
     $monthlyLabels = [];
     $monthlyData = [];
+    $monthlyUnityMap = [];
+    if ($hasJenisPresensi) {
+        $monthlyUnityRows = $this->db->table('absensi_detail ad')
+            ->select('a.tanggal, COUNT(ad.id) as total')
+            ->join('absensi a', 'a.id = ad.absensi_id')
+            ->where('ad.status', 'hadir')
+            ->where('a.jenis_presensi', 'unity')
+            ->where('a.tanggal >=', $monthStart)
+            ->where('a.tanggal <=', $today)
+            ->groupBy('a.tanggal')
+            ->orderBy('a.tanggal', 'ASC')
+            ->get()
+            ->getResultArray();
+        foreach ($monthlyUnityRows as $row) {
+            $monthlyUnityMap[$row['tanggal']] = (int) $row['total'];
+        }
+    }
+    $monthlyUnityData = [];
     $daysInRange = (int) date('j');
     for ($d = 1; $d <= $daysInRange; $d++) {
         $date = date('Y-m-') . str_pad((string) $d, 2, '0', STR_PAD_LEFT);
         $monthlyLabels[] = (string) $d;
         $monthlyData[] = $monthlyMap[$date] ?? 0;
+        $monthlyUnityData[] = $monthlyUnityMap[$date] ?? 0;
     }
 
     $todayHadir = $weeklyData[6] ?? 0;
+    $todayHadirUnity = $weeklyUnityData[6] ?? 0;
     $totalHadirMinggu = array_sum($weeklyData);
+    $totalHadirMingguUnity = array_sum($weeklyUnityData);
     $totalHadirBulan = array_sum($monthlyData);
+    $totalHadirBulanUnity = array_sum($monthlyUnityData);
     $avgHarian = $totalHadirMinggu > 0 ? round($totalHadirMinggu / 7, 1) : 0;
 
     $unitySummary = [];
@@ -466,14 +537,18 @@ public function admin()
         'ultahGuru'       => $ultahGuru,
         'weeklyLabels'    => $weeklyLabels,
         'weeklyData'      => $weeklyData,
+        'weeklyUnityData' => $weeklyUnityData,
         'monthlyLabels'   => $monthlyLabels,
         'monthlyData'     => $monthlyData,
+        'monthlyUnityData'=> $monthlyUnityData,
         'todayHadir'      => $todayHadir,
+        'todayHadirUnity' => $todayHadirUnity,
         'totalHadirMinggu'=> $totalHadirMinggu,
+        'totalHadirMingguUnity' => $totalHadirMingguUnity,
         'totalHadirBulan' => $totalHadirBulan,
+        'totalHadirBulanUnity' => $totalHadirBulanUnity,
         'avgHarian'       => $avgHarian,
         'unitySummary'    => $unitySummary,
-        'mode'            => $mode,
     ]);
 }
 
@@ -512,13 +587,4 @@ public function admin()
         return redirect()->to('/superadmin/dashboard');
     }
 
-    private function resolvePresensiMode($mode): string
-    {
-        $value = strtolower(trim((string) $mode));
-        if (!in_array($value, ['all', 'reguler', 'unity'], true)) {
-            return 'all';
-        }
-
-        return $value;
-    }
 }

@@ -10,7 +10,6 @@ class Dashboard extends BaseController
     public function index()
     {
         $db = Database::connect();
-        $mode = $this->resolvePresensiMode($this->request->getGet('mode'));
         $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
 
         // ===== USER STATS =====
@@ -25,19 +24,26 @@ class Dashboard extends BaseController
 
         $absenHariIniBuilder = $db->table('absensi')
             ->where('tanggal', $today);
-        if ($hasJenisPresensi && $mode !== 'all') {
-            $absenHariIniBuilder->where('jenis_presensi', $mode);
+        if ($hasJenisPresensi) {
+            $absenHariIniBuilder->where('jenis_presensi', 'unity');
         }
-        $absen_hari_ini = $absenHariIniBuilder->countAllResults();
+        $absen_unity_hari_ini = $absenHariIniBuilder->countAllResults();
+        $absen_hari_ini = $db->table('absensi')
+            ->where('tanggal', $today)
+            ->countAllResults();
 
         $absenDobelBuilder = $db->table('absensi_detail ad')
             ->join('absensi a', 'a.id = ad.absensi_id')
             ->where('ad.tanggal', $today)
             ->where('ad.status', 'dobel');
-        if ($hasJenisPresensi && $mode !== 'all') {
-            $absenDobelBuilder->where('a.jenis_presensi', $mode);
+        if ($hasJenisPresensi) {
+            $absenDobelBuilder->where('a.jenis_presensi', 'unity');
         }
-        $absen_dobel = $absenDobelBuilder->countAllResults();
+        $absen_dobel_unity = $absenDobelBuilder->countAllResults();
+        $absen_dobel = $db->table('absensi_detail ad')
+            ->where('ad.tanggal', $today)
+            ->where('ad.status', 'dobel')
+            ->countAllResults();
 
         $total_murid = $db->table('murid')->countAllResults();
         $unitySummary = [];
@@ -60,26 +66,43 @@ class Dashboard extends BaseController
             ->where('ad.status', 'hadir')
             ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
             ->where('a.tanggal <=', $today);
-        if ($hasJenisPresensi && $mode !== 'all') {
-            $weeklyRows->where('a.jenis_presensi', $mode);
-        }
         $weeklyRows = $weeklyRows
             ->groupBy('a.tanggal')
             ->orderBy('a.tanggal', 'ASC')
             ->get()
             ->getResultArray();
+        $weeklyUnityRows = [];
+        if ($hasJenisPresensi) {
+            $weeklyUnityRows = $db->table('absensi_detail ad')
+                ->select('a.tanggal, COUNT(ad.id) as total')
+                ->join('absensi a', 'a.id = ad.absensi_id')
+                ->where('ad.status', 'hadir')
+                ->where('a.jenis_presensi', 'unity')
+                ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
+                ->where('a.tanggal <=', $today)
+                ->groupBy('a.tanggal')
+                ->orderBy('a.tanggal', 'ASC')
+                ->get()
+                ->getResultArray();
+        }
 
         $weeklyMap = [];
         foreach ($weeklyRows as $row) {
             $weeklyMap[$row['tanggal']] = (int) $row['total'];
         }
+        $weeklyUnityMap = [];
+        foreach ($weeklyUnityRows as $row) {
+            $weeklyUnityMap[$row['tanggal']] = (int) $row['total'];
+        }
 
         $weeklyLabels = [];
         $weeklyData = [];
+        $weeklyUnityData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = date('Y-m-d', strtotime("-{$i} days"));
             $weeklyLabels[] = date('D', strtotime($date));
             $weeklyData[] = $weeklyMap[$date] ?? 0;
+            $weeklyUnityData[] = $weeklyUnityMap[$date] ?? 0;
         }
 
         // ===== DISTRIBUSI ROLE =====
@@ -119,16 +142,18 @@ class Dashboard extends BaseController
             'total_users'    => $total_users,
             'user_online'    => $user_online,
             'absen_hari_ini' => $absen_hari_ini,
+            'absen_unity_hari_ini' => $absen_unity_hari_ini,
             'absen_dobel'    => $absen_dobel,
+            'absen_dobel_unity' => $absen_dobel_unity,
             'total_murid'    => $total_murid,
             'weeklyLabels'   => $weeklyLabels,
             'weeklyData'     => $weeklyData,
+            'weeklyUnityData'=> $weeklyUnityData,
             'roleLabels'     => ['Superadmin', 'Admin', 'Guru'],
             'roleData'       => [$roleMap[1], $roleMap[2], $roleMap[3]],
             'activity'       => $activity,
             'maintenanceActive' => $maintenanceActive,
             'unitySummary'   => $unitySummary,
-            'mode'           => $mode,
         ]);
     }
 
@@ -217,13 +242,4 @@ class Dashboard extends BaseController
         ]);
     }
 
-    private function resolvePresensiMode($mode): string
-    {
-        $value = strtolower(trim((string) $mode));
-        if (!in_array($value, ['all', 'reguler', 'unity'], true)) {
-            return 'all';
-        }
-
-        return $value;
-    }
 }

@@ -97,11 +97,6 @@
     <div class="super-hero">
       <h3>Superadmin Control Center</h3>
       <small>Kontrol menyeluruh pengguna, keamanan sistem, dan kualitas data presensi.</small>
-      <div class="mt-2 d-flex flex-wrap" style="gap:8px">
-        <a class="btn btn-sm <?= (($mode ?? 'all')==='all')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('superadmin/dashboard?mode=all') ?>">Semua</a>
-        <a class="btn btn-sm <?= (($mode ?? '')==='reguler')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('superadmin/dashboard?mode=reguler') ?>">Reguler</a>
-        <a class="btn btn-sm <?= (($mode ?? '')==='unity')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('superadmin/dashboard?mode=unity') ?>">Unity</a>
-      </div>
     </div>
 
     <div class="kpi-grid">
@@ -120,17 +115,19 @@
       <div class="kpi-card">
         <div class="label">Presensi Hari Ini</div>
         <div class="value"><?= (int) ($absen_hari_ini ?? 0) ?></div>
+        <div class="chart-sub">Unity: <?= (int) ($absen_unity_hari_ini ?? 0) ?></div>
       </div>
       <div class="kpi-card">
         <div class="label">Presensi Dobel</div>
         <div class="value"><?= (int) ($absen_dobel ?? 0) ?></div>
+        <div class="chart-sub">Unity: <?= (int) ($absen_dobel_unity ?? 0) ?></div>
       </div>
     </div>
 
     <div class="panel-grid">
       <div class="chart-card">
         <h6>Grafik Kehadiran Minggu Ini (Global)</h6>
-        <div class="chart-sub">Jumlah status hadir dari seluruh kelas per hari</div>
+        <div class="chart-sub">Gabungan vs Unity per hari</div>
         <div class="chart-wrap"><canvas id="chartSuperWeekly"></canvas></div>
       </div>
 
@@ -176,7 +173,7 @@
           </button>
         </div>
         <hr>
-        <h6 class="mb-2">Distribusi Unity Aktif</h6>
+        <h6 class="mb-2">Jumlah Murid Aktif per Unity</h6>
         <?php if (empty($unitySummary)): ?>
           <div class="chart-sub">Belum ada data unity.</div>
         <?php else: ?>
@@ -193,6 +190,7 @@
 <script>
 const superWeeklyLabels = @json($weeklyLabels ?? []);
 const superWeeklyData = @json($weeklyData ?? []);
+const superWeeklyUnityData = @json($weeklyUnityData ?? []);
 const roleLabels = @json($roleLabels ?? []);
 const roleData = @json($roleData ?? []);
 let maintenanceActive = @json(!empty($maintenanceActive));
@@ -203,6 +201,7 @@ new Chart(document.getElementById('chartSuperWeekly'), {
   data: {
     labels: superWeeklyLabels,
     datasets: [{
+      label: 'Gabungan',
       data: superWeeklyData,
       borderColor: '#1d4ed8',
       backgroundColor: 'rgba(29,78,216,.14)',
@@ -211,12 +210,22 @@ new Chart(document.getElementById('chartSuperWeekly'), {
       pointHoverRadius: 6,
       tension: 0.35,
       fill: true
+    },{
+      label: 'Unity',
+      data: superWeeklyUnityData,
+      borderColor: '#7c3aed',
+      backgroundColor: 'rgba(124,58,237,.08)',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      tension: 0.35,
+      fill: false
     }]
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: { legend: { display: true } },
     scales: {
       x: { grid: { display: false }, ticks: { color: '#64748b' } },
       y: { beginAtZero: true, ticks: { precision: 0, color: '#64748b' }, grid: gridColor }
