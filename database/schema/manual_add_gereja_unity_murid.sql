@@ -7,3 +7,10 @@ ALTER TABLE `murid`
 -- UPDATE `murid`
 -- SET `unity` = NULL
 -- WHERE `unity` NOT IN ('Unity Peter', 'Unity David', 'Unity Samuel', 'Unity Joshua');
+
+-- Tambahkan Kelas TR jika belum ada.
+INSERT INTO `kelas` (`tingkat_id`, `kode_kelas`, `nama_kelas`)
+SELECT NULL, 'TR', 'Kelas TR'
+WHERE NOT EXISTS (
+    SELECT 1 FROM `kelas` WHERE `kode_kelas` = 'TR'
+);
