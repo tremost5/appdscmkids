@@ -1,6 +1,6 @@
 {
-  "name": "Presensi DSCM Kids",
-  "short_name": "DSCM Kids",
+  "name": "Dscmkids App",
+  "short_name": "Dscmkids App",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
