@@ -66,7 +66,7 @@ $kelasMap=[1=>'PG',2=>'TKA',3=>'TKB',4=>'1',5=>'2',6=>'3',7=>'4',8=>'5',9=>'6',1
 ?>
 <tr>
   <td><?= esc($displayNama) ?></td>
-  <td><span class="badge badge-info"><?= $kelasMap[$d['kelas_id']] ?></span></td>
+  <td><span class="badge badge-info"><?= esc($kelasMap[$d['kelas_id']] ?? '-') ?></span></td>
   <td><?= esc($d['tanggal']) ?></td>
   <td><?= esc($d['jam']) ?></td>
   <td><?= esc($d['lokasi_id']) ?></td>

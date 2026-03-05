@@ -37,14 +37,19 @@
               <th>Unity</th>
               <th>Kelas</th>
               <th>Status</th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             <?php if (empty($murid)): ?>
               <tr>
-                <td colspan="6" class="text-center text-muted">Belum ada data murid.</td>
+                <td colspan="7" class="text-center text-muted">Belum ada data murid.</td>
               </tr>
             <?php else: ?>
+              <?php
+                $uri = trim((string) uri_string(), '/');
+                $isSuperadmin = str_starts_with($uri, 'dashboard/superadmin/');
+              ?>
               <?php foreach ($murid as $m): ?>
                 <tr>
                   <td><?= esc(trim(($m['nama_depan'] ?? '').' '.($m['nama_belakang'] ?? ''))) ?></td>
@@ -53,6 +58,12 @@
                   <td><?= unityBadge($m['unity'] ?? '') ?> <?= esc($m['unity'] ?? '-') ?></td>
                   <td><?= esc($m['nama_kelas'] ?? '-') ?></td>
                   <td><?= esc($m['status'] ?? '-') ?></td>
+                  <td>
+                    <a class="btn btn-sm btn-warning"
+                       href="<?= $isSuperadmin ? base_url('dashboard/superadmin/murid/edit/'.$m['id']) : base_url('admin/murid/edit/'.$m['id']) ?>">
+                      Edit
+                    </a>
+                  </td>
                 </tr>
               <?php endforeach; ?>
             <?php endif; ?>

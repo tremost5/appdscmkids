@@ -145,8 +145,13 @@ class GuruMurid extends BaseController
      * ========================= */
     public function edit($id)
     {
+        $murid = $this->muridModel->find($id);
+        if (!$murid) {
+            return redirect()->to('guru/murid')->with('error', 'Data murid tidak ditemukan');
+        }
+
         return view('guru/murid/edit', [
-            'murid' => $this->muridModel->find($id),
+            'murid' => $murid,
             'kelas' => $this->db->table('kelas')->orderBy('nama_kelas','ASC')->get()->getResultArray(),
             'unityOptions' => self::UNITY_OPTIONS,
         ]);
@@ -158,6 +163,16 @@ class GuruMurid extends BaseController
     public function update($id)
     {
         $old = $this->muridModel->find($id);
+        if (!$old) {
+            return redirect()->to('guru/murid')->with('error', 'Data murid tidak ditemukan');
+        }
+
+        $kelasId = (int) ($this->request->getPost('kelas_id') ?? 0);
+        $kelasExists = $kelasId > 0
+            && $this->db->table('kelas')->where('id', $kelasId)->countAllResults() > 0;
+        if (!$kelasExists) {
+            return redirect()->back()->withInput()->with('error', 'Kelas tidak valid');
+        }
 
         $noHpRaw = $this->request->getPost('no_hp');
         $noHp = function_exists('normalizeWa')
@@ -173,7 +188,7 @@ class GuruMurid extends BaseController
             'nama_depan'    => $this->request->getPost('nama_depan'),
             'nama_belakang' => $this->request->getPost('nama_belakang'),
             'panggilan'     => $this->request->getPost('panggilan'),
-            'kelas_id'      => $this->request->getPost('kelas_id'),
+            'kelas_id'      => $kelasId,
             'jenis_kelamin' => $this->request->getPost('jenis_kelamin'),
             'tanggal_lahir' => $this->request->getPost('tanggal_lahir'),
             'alamat'        => $this->request->getPost('alamat'),
@@ -252,8 +267,7 @@ class GuruMurid extends BaseController
             return $this->hasUnityColumn;
         }
 
-        $result = $this->db->query("SHOW COLUMNS FROM murid LIKE ?", [$column])->getRowArray();
-        $exists = !empty($result);
+        $exists = $this->hasTableColumn('murid', $column);
 
         if ($column === 'gereja_asal') {
             $this->hasGerejaAsalColumn = $exists;

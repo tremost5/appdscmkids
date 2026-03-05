@@ -82,6 +82,8 @@ Route::prefix('dashboard/superadmin')->middleware(['auth', 'role:1'])->group(fun
     Route::post('/guru/delete/{id}', [AdminGuru::class, 'delete']);
 
     Route::get('/murid', [AdminMurid::class, 'index']);
+    Route::get('/murid/edit/{id}', [AdminMurid::class, 'edit']);
+    Route::post('/murid/update/{id}', [AdminMurid::class, 'update']);
     Route::get('/kelas', [Tingkat::class, 'index']);
 
     Route::get('/rekap-absensi', [AdminAbsensi::class, 'index']);
@@ -137,6 +139,9 @@ Route::prefix('admin')->middleware(['auth', 'role:2', 'menuaccess'])->group(func
     Route::post('/bahan-ajar/update-ajax/{id}', [AdminMateri::class, 'updateAjax']);
     Route::post('/bahan-ajar/delete-ajax/{id}', [AdminMateri::class, 'deleteAjax']);
 
+    Route::get('/murid', [AdminMurid::class, 'index']);
+    Route::get('/murid/edit/{id}', [AdminMurid::class, 'edit']);
+    Route::post('/murid/update/{id}', [AdminMurid::class, 'update']);
     Route::get('/murid/import', [AdminMurid::class, 'importForm']);
     Route::post('/murid/import-preview', [AdminMurid::class, 'importPreview']);
     Route::post('/murid/import-execute', [AdminMurid::class, 'importExecute']);

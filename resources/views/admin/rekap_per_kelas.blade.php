@@ -23,7 +23,7 @@ $mapKelas = [
 
 <?php foreach ($rekap as $kelas=>$r): ?>
 <tr>
-  <td><?= $mapKelas[$kelas] ?></td>
+  <td><?= esc($mapKelas[$kelas] ?? '-') ?></td>
   <td><?= $r['HADIR'] ?></td>
   <td><?= $r['TIDAK HADIR'] ?></td>
 </tr>

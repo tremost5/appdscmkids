@@ -7,6 +7,10 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class AdminMurid extends BaseController
 {
+    private const UNITY_OPTIONS = ['Unity Peter', 'Unity David', 'Unity Samuel', 'Unity Joshua'];
+    private ?bool $hasGerejaAsalColumn = null;
+    private ?bool $hasUnityColumn = null;
+
     protected $db;
 
     public function __construct(){
@@ -47,6 +51,85 @@ class AdminMurid extends BaseController
             'kelasAktif' => $kelasId,
             'q'          => $q,
         ]);
+    }
+
+    public function edit($id)
+    {
+        $murid = $this->db->table('murid')->where('id', (int) $id)->get()->getRowArray();
+        if (!$murid) {
+            return redirect()->back()->with('error', 'Data murid tidak ditemukan.');
+        }
+
+        return view('admin/murid_edit', [
+            'murid' => $murid,
+            'kelas' => $this->db->table('kelas')->orderBy('nama_kelas', 'ASC')->get()->getResultArray(),
+            'unityOptions' => self::UNITY_OPTIONS,
+        ]);
+    }
+
+    public function update($id)
+    {
+        $murid = $this->db->table('murid')->where('id', (int) $id)->get()->getRowArray();
+        if (!$murid) {
+            return redirect()->back()->with('error', 'Data murid tidak ditemukan.');
+        }
+
+        $kelasId = (int) ($this->request->getPost('kelas_id') ?? 0);
+        $kelasExists = $kelasId > 0
+            && $this->db->table('kelas')->where('id', $kelasId)->countAllResults() > 0;
+        if (!$kelasExists) {
+            return redirect()->back()->withInput()->with('error', 'Kelas tidak valid.');
+        }
+
+        $rules = [
+            'nama_depan'    => 'required',
+            'tanggal_lahir' => 'required',
+            'jenis_kelamin' => 'required|in_list[L,P]',
+            'kelas_id'      => 'required',
+            'unity'         => 'permit_empty|in_list[Unity Peter,Unity David,Unity Samuel,Unity Joshua]',
+        ];
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('error', 'Data wajib belum lengkap atau tidak valid.');
+        }
+
+        $noHpRaw = $this->request->getPost('no_hp');
+        $noHp = function_exists('normalizeWa')
+            ? normalizeWa($noHpRaw)
+            : (function_exists('formatWA') ? formatWA($noHpRaw) : preg_replace('/[^0-9]/', '', (string) $noHpRaw));
+
+        $data = [
+            'nama_depan'    => trim((string) $this->request->getPost('nama_depan')),
+            'nama_belakang' => trim((string) $this->request->getPost('nama_belakang')),
+            'panggilan'     => trim((string) $this->request->getPost('panggilan')),
+            'kelas_id'      => $kelasId,
+            'jenis_kelamin' => (string) $this->request->getPost('jenis_kelamin'),
+            'tanggal_lahir' => (string) $this->request->getPost('tanggal_lahir'),
+            'alamat'        => trim((string) $this->request->getPost('alamat')),
+            'no_hp'         => $noHp,
+        ];
+
+        if ($this->hasMuridColumn('gereja_asal')) {
+            $data['gereja_asal'] = trim((string) $this->request->getPost('gereja_asal'));
+        }
+        if ($this->hasMuridColumn('unity')) {
+            $data['unity'] = $this->sanitizeUnity($this->request->getPost('unity'));
+        }
+
+        $foto = $this->request->getFile('foto');
+        if ($foto && $foto->isValid() && !$foto->hasMoved()) {
+            $uploadDir = FCPATH . 'uploads/murid';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0775, true);
+            }
+            $namaFoto = $foto->getRandomName();
+            $foto->move($uploadDir, $namaFoto);
+            $data['foto'] = $namaFoto;
+        }
+
+        $this->db->table('murid')->where('id', (int) $id)->update($data);
+
+        return redirect()->to($this->resolveMuridListUrl())
+            ->with('success', 'Data murid berhasil diperbarui.');
     }
 
     /* =========================
@@ -163,5 +246,45 @@ class AdminMurid extends BaseController
 
         return redirect()->to('/admin/murid/import')
             ->with('success', "Import berhasil. Murid ditambahkan: {$inserted}");
+    }
+
+    private function sanitizeUnity($unity): ?string
+    {
+        $value = trim((string) $unity);
+        if ($value === '') {
+            return null;
+        }
+
+        return in_array($value, self::UNITY_OPTIONS, true) ? $value : null;
+    }
+
+    private function hasMuridColumn(string $column): bool
+    {
+        if ($column === 'gereja_asal' && $this->hasGerejaAsalColumn !== null) {
+            return $this->hasGerejaAsalColumn;
+        }
+        if ($column === 'unity' && $this->hasUnityColumn !== null) {
+            return $this->hasUnityColumn;
+        }
+
+        $exists = $this->hasTableColumn('murid', $column);
+
+        if ($column === 'gereja_asal') {
+            $this->hasGerejaAsalColumn = $exists;
+        } elseif ($column === 'unity') {
+            $this->hasUnityColumn = $exists;
+        }
+
+        return $exists;
+    }
+
+    private function resolveMuridListUrl(): string
+    {
+        $uri = trim((string) uri_string(), '/');
+        if (str_starts_with($uri, 'dashboard/superadmin/')) {
+            return '/dashboard/superadmin/murid';
+        }
+
+        return '/admin/murid';
     }
 }
