@@ -34,6 +34,20 @@
        placeholder="Nama Panggilan (opsional)"
        value="<?= esc(old('panggilan')) ?>">
 
+<input class="form-control mb-2"
+       name="gereja_asal"
+       placeholder="Gereja Asal (opsional)"
+       value="<?= esc(old('gereja_asal')) ?>">
+
+<select name="unity" class="form-control mb-2">
+  <option value="">Pilih Unity (opsional)</option>
+  <?php foreach (($unityOptions ?? []) as $opt): ?>
+    <option value="<?= esc($opt) ?>" <?= old('unity')===$opt?'selected':'' ?>>
+      <?= esc($opt) ?>
+    </option>
+  <?php endforeach; ?>
+</select>
+
 <!-- TANGGAL LAHIR -->
 <div class="form-group">
   <label class="small font-weight-bold">Tanggal Lahir</label>

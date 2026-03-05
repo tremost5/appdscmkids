@@ -33,6 +33,8 @@
             <tr>
               <th>Nama</th>
               <th>Panggilan</th>
+              <th>Gereja Asal</th>
+              <th>Unity</th>
               <th>Kelas</th>
               <th>Status</th>
             </tr>
@@ -40,13 +42,15 @@
           <tbody>
             <?php if (empty($murid)): ?>
               <tr>
-                <td colspan="4" class="text-center text-muted">Belum ada data murid.</td>
+                <td colspan="6" class="text-center text-muted">Belum ada data murid.</td>
               </tr>
             <?php else: ?>
               <?php foreach ($murid as $m): ?>
                 <tr>
                   <td><?= esc(trim(($m['nama_depan'] ?? '').' '.($m['nama_belakang'] ?? ''))) ?></td>
                   <td><?= esc($m['panggilan'] ?? '-') ?></td>
+                  <td><?= esc($m['gereja_asal'] ?? '-') ?></td>
+                  <td><?= esc($m['unity'] ?? '-') ?></td>
                   <td><?= esc($m['nama_kelas'] ?? '-') ?></td>
                   <td><?= esc($m['status'] ?? '-') ?></td>
                 </tr>

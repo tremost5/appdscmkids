@@ -13,6 +13,8 @@ class MuridModel extends Model
         'nama_depan',
         'nama_belakang',
         'panggilan',
+        'gereja_asal',
+        'unity',
         'kelas_id',
         'jenis_kelamin',
         'tanggal_lahir',

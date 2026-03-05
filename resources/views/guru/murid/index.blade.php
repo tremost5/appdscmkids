@@ -52,6 +52,8 @@
 <tr>
   <th>Nama</th>
   <th>Panggilan</th>
+  <th>Gereja Asal</th>
+  <th>Unity</th>
   <th>Kelas</th>
   <th>Gender</th>
   <th width="200">Aksi</th>
@@ -83,12 +85,16 @@
           data-foto="<?= esc($fotoUrl) ?>"
           data-ttl="<?= esc($m['tanggal_lahir'] ?? '-') ?>"
           data-kelas="<?= esc($m['nama_kelas']) ?>"
+          data-gereja="<?= esc($m['gereja_asal'] ?? '-') ?>"
+          data-unity="<?= esc($m['unity'] ?? '-') ?>"
           data-alamat="<?= esc($m['alamat'] ?? '-') ?>">
       <?= esc($namaLengkap) ?>
     </span>
   </td>
 
   <td><span class="badge badge-info"><?= esc($panggilan) ?></span></td>
+  <td><?= esc($m['gereja_asal'] ?? '-') ?></td>
+  <td><?= esc($m['unity'] ?? '-') ?></td>
   <td><?= esc($m['nama_kelas']) ?></td>
   <td><?= esc($m['jenis_kelamin']) ?></td>
 
@@ -147,6 +153,8 @@
 
     <div class="text-muted" style="font-size:14px">
       🎂 <span id="muridTtl"></span><br>
+      ⛪ <span id="muridGereja"></span><br>
+      👥 <span id="muridUnity"></span><br>
       🏷️ <span id="muridKelas"></span><br>
       📍 <span id="muridAlamat"></span><br>
       📞 <span id="muridHp"></span>
@@ -196,6 +204,8 @@ document.querySelectorAll('.murid-detail').forEach(el=>{
     document.getElementById('muridNama').innerText=el.dataset.nama;
     document.getElementById('muridPanggilan').innerText=el.dataset.panggilan;
     document.getElementById('muridTtl').innerText=el.dataset.ttl;
+    document.getElementById('muridGereja').innerText=el.dataset.gereja;
+    document.getElementById('muridUnity').innerText=el.dataset.unity;
     document.getElementById('muridKelas').innerText=el.dataset.kelas;
     document.getElementById('muridAlamat').innerText=el.dataset.alamat;
     document.getElementById('muridHp').innerText=el.dataset.hp;

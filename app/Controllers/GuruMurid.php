@@ -7,6 +7,8 @@ use App\Models\MuridModel;
 
 class GuruMurid extends BaseController
 {
+    private const UNITY_OPTIONS = ['Unity Peter', 'Unity David', 'Unity Samuel', 'Unity Joshua'];
+
     protected $muridModel;
     protected $db;
 
@@ -63,7 +65,8 @@ class GuruMurid extends BaseController
     public function create()
     {
         return view('guru/murid/create', [
-            'kelas' => $this->db->table('kelas')->orderBy('nama_kelas','ASC')->get()->getResultArray()
+            'kelas' => $this->db->table('kelas')->orderBy('nama_kelas','ASC')->get()->getResultArray(),
+            'unityOptions' => self::UNITY_OPTIONS,
         ]);
     }
 
@@ -77,6 +80,7 @@ class GuruMurid extends BaseController
             'tanggal_lahir' => 'required',
             'jenis_kelamin' => 'required',
             'kelas_id'      => 'required',
+            'unity'         => 'permit_empty|in_list[Unity Peter,Unity David,Unity Samuel,Unity Joshua]',
         ];
 
         if (!$this->validate($rules)) {
@@ -91,10 +95,14 @@ class GuruMurid extends BaseController
                 return substr($v,0,1)==='0' ? '62'.substr($v,1) : $v;
             })($noHpRaw);
 
+        $unity = $this->sanitizeUnity($this->request->getPost('unity'));
+
         $data = [
             'nama_depan'    => $this->request->getPost('nama_depan'),
             'nama_belakang' => $this->request->getPost('nama_belakang'),
             'panggilan'     => $this->request->getPost('panggilan'),
+            'gereja_asal'   => $this->request->getPost('gereja_asal'),
+            'unity'         => $unity,
             'kelas_id'      => $this->request->getPost('kelas_id'),
             'jenis_kelamin' => $this->request->getPost('jenis_kelamin'),
             'tanggal_lahir' => $this->request->getPost('tanggal_lahir'),
@@ -133,7 +141,8 @@ class GuruMurid extends BaseController
     {
         return view('guru/murid/edit', [
             'murid' => $this->muridModel->find($id),
-            'kelas' => $this->db->table('kelas')->orderBy('nama_kelas','ASC')->get()->getResultArray()
+            'kelas' => $this->db->table('kelas')->orderBy('nama_kelas','ASC')->get()->getResultArray(),
+            'unityOptions' => self::UNITY_OPTIONS,
         ]);
     }
 
@@ -152,10 +161,14 @@ class GuruMurid extends BaseController
                 return substr($v,0,1)==='0' ? '62'.substr($v,1) : $v;
             })($noHpRaw);
 
+        $unity = $this->sanitizeUnity($this->request->getPost('unity'));
+
         $data = [
             'nama_depan'    => $this->request->getPost('nama_depan'),
             'nama_belakang' => $this->request->getPost('nama_belakang'),
             'panggilan'     => $this->request->getPost('panggilan'),
+            'gereja_asal'   => $this->request->getPost('gereja_asal'),
+            'unity'         => $unity,
             'kelas_id'      => $this->request->getPost('kelas_id'),
             'jenis_kelamin' => $this->request->getPost('jenis_kelamin'),
             'tanggal_lahir' => $this->request->getPost('tanggal_lahir'),
@@ -208,5 +221,15 @@ class GuruMurid extends BaseController
         );
 
         return redirect()->to('guru/murid')->with('success','Murid dinonaktifkan');
+    }
+
+    private function sanitizeUnity($unity): ?string
+    {
+        $value = trim((string) $unity);
+        if ($value === '') {
+            return null;
+        }
+
+        return in_array($value, self::UNITY_OPTIONS, true) ? $value : null;
     }
 }

@@ -30,6 +30,19 @@
  placeholder="Nama Panggilan (opsional)"
  value="<?= $murid['panggilan'] ?? '' ?>">
 
+<input class="form-control mb-2" name="gereja_asal"
+ placeholder="Gereja Asal (opsional)"
+ value="<?= esc($murid['gereja_asal'] ?? '') ?>">
+
+<select name="unity" class="form-control mb-2">
+<option value="">Pilih Unity (opsional)</option>
+<?php foreach (($unityOptions ?? []) as $opt): ?>
+<option value="<?= esc($opt) ?>" <?= (($murid['unity'] ?? '')===$opt)?'selected':'' ?>>
+<?= esc($opt) ?>
+</option>
+<?php endforeach; ?>
+</select>
+
 <input type="date" class="form-control mb-2"
  name="tanggal_lahir" required
  value="<?= $murid['tanggal_lahir'] ?? '' ?>">
