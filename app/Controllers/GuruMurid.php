@@ -77,6 +77,10 @@ class GuruMurid extends BaseController
      * ========================= */
     public function store()
     {
+        if (!$this->validateOptionalMuridColumns()) {
+            return redirect()->back()->withInput()->with('error', $this->optionalColumnErrorMessage());
+        }
+
         $rules = [
             'nama_depan'    => 'required',
             'tanggal_lahir' => 'required',
@@ -165,6 +169,10 @@ class GuruMurid extends BaseController
         $old = $this->muridModel->find($id);
         if (!$old) {
             return redirect()->to('guru/murid')->with('error', 'Data murid tidak ditemukan');
+        }
+
+        if (!$this->validateOptionalMuridColumns()) {
+            return redirect()->back()->withInput()->with('error', $this->optionalColumnErrorMessage());
         }
 
         $kelasId = (int) ($this->request->getPost('kelas_id') ?? 0);
@@ -302,5 +310,37 @@ class GuruMurid extends BaseController
         }
 
         return false;
+    }
+
+    private function validateOptionalMuridColumns(): bool
+    {
+        $postedGereja = trim((string) $this->request->getPost('gereja_asal'));
+        $postedUnity = trim((string) $this->request->getPost('unity'));
+
+        if ($postedGereja !== '' && !$this->hasMuridColumn('gereja_asal')) {
+            return false;
+        }
+        if ($postedUnity !== '' && !$this->hasMuridColumn('unity')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function optionalColumnErrorMessage(): string
+    {
+        $missing = [];
+        if (trim((string) $this->request->getPost('gereja_asal')) !== '' && !$this->hasMuridColumn('gereja_asal')) {
+            $missing[] = 'gereja_asal';
+        }
+        if (trim((string) $this->request->getPost('unity')) !== '' && !$this->hasMuridColumn('unity')) {
+            $missing[] = 'unity';
+        }
+
+        if (empty($missing)) {
+            return 'Struktur database belum sinkron.';
+        }
+
+        return 'Kolom database belum tersedia: '.implode(', ', $missing).'. Jalankan SQL ALTER TABLE di hosting.';
     }
 }

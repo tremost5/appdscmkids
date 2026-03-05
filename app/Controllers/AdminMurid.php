@@ -74,6 +74,10 @@ class AdminMurid extends BaseController
             return redirect()->back()->with('error', 'Data murid tidak ditemukan.');
         }
 
+        if (!$this->validateOptionalMuridColumns()) {
+            return redirect()->back()->withInput()->with('error', $this->optionalColumnErrorMessage());
+        }
+
         $kelasId = (int) ($this->request->getPost('kelas_id') ?? 0);
         $kelasExists = $kelasId > 0
             && $this->db->table('kelas')->where('id', $kelasId)->countAllResults() > 0;
@@ -311,5 +315,37 @@ class AdminMurid extends BaseController
         }
 
         return false;
+    }
+
+    private function validateOptionalMuridColumns(): bool
+    {
+        $postedGereja = trim((string) $this->request->getPost('gereja_asal'));
+        $postedUnity = trim((string) $this->request->getPost('unity'));
+
+        if ($postedGereja !== '' && !$this->hasMuridColumn('gereja_asal')) {
+            return false;
+        }
+        if ($postedUnity !== '' && !$this->hasMuridColumn('unity')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function optionalColumnErrorMessage(): string
+    {
+        $missing = [];
+        if (trim((string) $this->request->getPost('gereja_asal')) !== '' && !$this->hasMuridColumn('gereja_asal')) {
+            $missing[] = 'gereja_asal';
+        }
+        if (trim((string) $this->request->getPost('unity')) !== '' && !$this->hasMuridColumn('unity')) {
+            $missing[] = 'unity';
+        }
+
+        if (empty($missing)) {
+            return 'Struktur database belum sinkron.';
+        }
+
+        return 'Kolom database belum tersedia: '.implode(', ', $missing).'. Jalankan SQL ALTER TABLE di hosting.';
     }
 }
