@@ -117,7 +117,7 @@ class AdminAbsensiDobel extends Controller
     $this->db->table('absensi_detail')
         ->where('murid_id', $muridId)
         ->where('tanggal', $tanggal)
-        ->where('id !=', $detailId)
+        ->where('id', '!=', $detailId)
         ->update(['status' => 'batal']);
 
     if ($this->db->transStatus() === false) {

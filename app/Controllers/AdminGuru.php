@@ -309,7 +309,7 @@ class AdminGuru extends BaseController
             if ($hasCreatedAt) {
                 $baruHariIni = (int) $this->db->table('users')
                     ->where('role_id', 3)
-                    ->where('created_at >=', $startToday)
+                    ->where('created_at', '>=', $startToday)
                     ->countAllResults();
             }
 
@@ -319,7 +319,7 @@ class AdminGuru extends BaseController
                     ->where('role_id', 3)
                     ->groupStart()
                         ->where('status', 'nonaktif')
-                        ->orWhere('created_at >=', $startToday)
+                        ->orWhere('created_at', '>=', $startToday)
                     ->groupEnd()
                     ->countAllResults();
             }

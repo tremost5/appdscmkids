@@ -68,8 +68,8 @@ class AdminAbsensi extends BaseController
             ->join('absensi a', 'a.id = ad.absensi_id')
             ->join('murid m', 'm.id = ad.murid_id')
             ->where('ad.status', 'hadir')
-            ->where('a.tanggal >=', $start)
-            ->where('a.tanggal <=', $end);
+            ->where('a.tanggal', '>=', $start)
+            ->where('a.tanggal', '<=', $end);
 
         if ($kelas) {
             $builder->where('m.kelas_id', $kelas);
@@ -323,8 +323,8 @@ class AdminAbsensi extends BaseController
             ->join('murid m', 'm.id = ad.murid_id')
             ->join('kelas k', 'k.id = m.kelas_id', 'left')
             ->where('ad.status', 'hadir')
-            ->where('a.tanggal >=', $start)
-            ->where('a.tanggal <=', $end);
+            ->where('a.tanggal', '>=', $start)
+            ->where('a.tanggal', '<=', $end);
 
         if ($kelas) {
             $builder->where('m.kelas_id', $kelas);
@@ -395,8 +395,8 @@ class AdminAbsensi extends BaseController
             ->join('users u', 'u.id = a.guru_id', 'left')
             ->join('lokasi_ibadah li', 'li.id = a.lokasi_id', 'left')
             ->where('m.kelas_id', $kelas)
-            ->where('a.tanggal >=', $start)
-            ->where('a.tanggal <=', $end);
+            ->where('a.tanggal', '>=', $start)
+            ->where('a.tanggal', '<=', $end);
 
         if ($guru) {
             $builder->where('a.guru_id', $guru);

@@ -23,7 +23,7 @@ class AuthOtp extends BaseController
 
     $model = new \App\Models\UserModel();
     $user = $model->where('reset_token', $otp)
-                  ->where('reset_expires >=', date('Y-m-d H:i:s'))
+                  ->where('reset_expires', '>=', date('Y-m-d H:i:s'))
                   ->first();
 
     if (!$user) {

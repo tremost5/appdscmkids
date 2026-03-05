@@ -17,8 +17,8 @@ class ActivityLog extends BaseController
         $builder = $db->table('audit_log al')
             ->select('al.*, u.nama_depan, u.nama_belakang, u.role_id')
             ->join('users u', 'u.id = al.user_id', 'left')
-            ->where('al.created_at >=', $start.' 00:00:00')
-            ->where('al.created_at <=', $end.' 23:59:59')
+            ->where('al.created_at', '>=', $start.' 00:00:00')
+            ->where('al.created_at', '<=', $end.' 23:59:59')
             ->orderBy('al.created_at', 'DESC');
 
         if ($role === 'admin') {

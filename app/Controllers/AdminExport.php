@@ -59,8 +59,8 @@ class AdminExport extends BaseController
             ->join('lokasi_ibadah li','li.id=a.lokasi_id','left')
             ->join('users u','u.id=a.guru_id','left')
             ->where('ad.status','hadir')
-            ->where('a.tanggal >=',$start)
-            ->where('a.tanggal <=',$end);
+            ->where('a.tanggal', '>=', $start)
+            ->where('a.tanggal', '<=', $end);
 
         if ($hasJenisPresensi && $mode !== 'all') {
             $rows->where('a.jenis_presensi', $mode);

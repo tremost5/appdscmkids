@@ -17,7 +17,7 @@ class Dashboard extends BaseController
         $total_users = $db->table('users')->countAllResults();
 
         $user_online = $db->table('users')
-            ->where('last_seen >=', date('Y-m-d H:i:s', strtotime('-5 minutes')))
+            ->where('last_seen', '>=', date('Y-m-d H:i:s', strtotime('-5 minutes')))
             ->countAllResults();
 
         // ===== ABSENSI STATS =====
@@ -53,7 +53,7 @@ class Dashboard extends BaseController
                 ->select('unity, COUNT(id) as total')
                 ->where('status', 'aktif')
                 ->where('unity IS NOT NULL', null, false)
-                ->where('unity <>', '')
+                ->where('unity', '<>', '')
                 ->groupBy('unity')
                 ->orderBy('unity', 'ASC')
                 ->get()
@@ -65,8 +65,8 @@ class Dashboard extends BaseController
             ->select('a.tanggal, COUNT(ad.id) as total')
             ->join('absensi a', 'a.id = ad.absensi_id')
             ->where('ad.status', 'hadir')
-            ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
-            ->where('a.tanggal <=', $today);
+            ->where('a.tanggal', '>=', date('Y-m-d', strtotime('-6 days')))
+            ->where('a.tanggal', '<=', $today);
         $weeklyRows = $weeklyRows
             ->groupBy('a.tanggal')
             ->orderBy('a.tanggal', 'ASC')
@@ -79,8 +79,8 @@ class Dashboard extends BaseController
                 ->join('absensi a', 'a.id = ad.absensi_id')
                 ->where('ad.status', 'hadir')
                 ->where('a.jenis_presensi', 'unity')
-                ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
-                ->where('a.tanggal <=', $today)
+                ->where('a.tanggal', '>=', date('Y-m-d', strtotime('-6 days')))
+                ->where('a.tanggal', '<=', $today)
                 ->groupBy('a.tanggal')
                 ->orderBy('a.tanggal', 'ASC')
                 ->get()
