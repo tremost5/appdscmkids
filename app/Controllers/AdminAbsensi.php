@@ -28,10 +28,12 @@ class AdminAbsensi extends BaseController
     public function range()
     {
         $hasUnity = $this->hasTableColumn('murid', 'unity');
+        $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
         $kelas = $this->request->getGet('kelas');
         $unity = trim((string) $this->request->getGet('unity'));
+        $mode  = $this->resolvePresensiMode($this->request->getGet('mode'));
 
         if (!$start || !$end) {
             return view('admin/rekap_absensi_range', [
@@ -39,7 +41,8 @@ class AdminAbsensi extends BaseController
                 'start' => $start,
                 'end'   => $end,
                 'kelas' => $kelas,
-                'unity' => $unity
+                'unity' => $unity,
+                'mode'  => $mode
             ]);
         }
 
@@ -74,6 +77,9 @@ class AdminAbsensi extends BaseController
         if ($hasUnity && $unity !== '') {
             $builder->where('m.unity', $unity);
         }
+        if ($hasJenisPresensi && $mode !== 'all') {
+            $builder->where('a.jenis_presensi', $mode);
+        }
 
         $rows = $builder
             ->groupBy('a.tanggal')
@@ -86,7 +92,8 @@ class AdminAbsensi extends BaseController
             'start' => $start,
             'end'   => $end,
             'kelas' => $kelas,
-            'unity' => $unity
+            'unity' => $unity,
+            'mode'  => $mode
         ]);
     }
 
@@ -96,10 +103,12 @@ class AdminAbsensi extends BaseController
     public function detailTanggal($tanggal)
     {
         $hasUnity = $this->hasTableColumn('murid', 'unity');
+        $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
         $kelas  = $this->request->getGet('kelas');
         $guru   = $this->request->getGet('guru');
         $lokasi = $this->request->getGet('lokasi');
         $unity  = trim((string) $this->request->getGet('unity'));
+        $mode   = $this->resolvePresensiMode($this->request->getGet('mode'));
 
         $guruList = $this->db->table('users')
             ->select('id, nama_depan, nama_belakang')
@@ -144,6 +153,9 @@ class AdminAbsensi extends BaseController
         if ($hasUnity && $unity !== '') {
             $builder->where('m.unity', $unity);
         }
+        if ($hasJenisPresensi && $mode !== 'all') {
+            $builder->where('a.jenis_presensi', $mode);
+        }
 
         $rows = $builder
             ->orderBy('m.kelas_id', 'ASC')
@@ -173,6 +185,7 @@ class AdminAbsensi extends BaseController
             'guru'     => $guru,
             'lokasi'   => $lokasi,
             'unity'    => $unity,
+            'mode'     => $mode,
             'guruList' => $guruList
         ]);
     }
@@ -183,7 +196,9 @@ class AdminAbsensi extends BaseController
     public function export($mode, $tanggal)
     {
         $hasUnity = $this->hasTableColumn('murid', 'unity');
+        $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
         $unity = trim((string) $this->request->getGet('unity'));
+        $jenis = $this->resolvePresensiMode($this->request->getGet('mode'));
 
         $data = $this->db->table('absensi_detail ad')
             ->select('
@@ -209,6 +224,9 @@ class AdminAbsensi extends BaseController
 
         if ($hasUnity && $unity !== '') {
             $data->where('m.unity', $unity);
+        }
+        if ($hasJenisPresensi && $jenis !== 'all') {
+            $data->where('a.jenis_presensi', $jenis);
         }
 
         $data = $data
@@ -263,10 +281,12 @@ class AdminAbsensi extends BaseController
     public function kelas()
     {
         $hasUnity = $this->hasTableColumn('murid', 'unity');
+        $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
         $kelas = $this->request->getGet('kelas');
         $unity = trim((string) $this->request->getGet('unity'));
+        $mode  = $this->resolvePresensiMode($this->request->getGet('mode'));
 
         if (!$start || !$end) {
             return view('admin/rekap_absensi_kelas', [
@@ -274,7 +294,8 @@ class AdminAbsensi extends BaseController
                 'start' => $start,
                 'end'   => $end,
                 'kelas' => $kelas,
-                'unity' => $unity
+                'unity' => $unity,
+                'mode'  => $mode
             ]);
         }
 
@@ -311,6 +332,9 @@ class AdminAbsensi extends BaseController
         if ($hasUnity && $unity !== '') {
             $builder->where('m.unity', $unity);
         }
+        if ($hasJenisPresensi && $mode !== 'all') {
+            $builder->where('a.jenis_presensi', $mode);
+        }
 
         $rows = $builder
             ->groupBy('m.kelas_id')
@@ -323,7 +347,8 @@ class AdminAbsensi extends BaseController
             'start' => $start,
             'end'   => $end,
             'kelas' => $kelas,
-            'unity' => $unity
+            'unity' => $unity,
+            'mode'  => $mode
         ]);
     }
 
@@ -333,10 +358,12 @@ class AdminAbsensi extends BaseController
     public function kelasDetail()
     {
         $hasUnity = $this->hasTableColumn('murid', 'unity');
+        $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
         $kelas = $this->request->getGet('kelas');
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
         $unity = trim((string) $this->request->getGet('unity'));
+        $mode  = $this->resolvePresensiMode($this->request->getGet('mode'));
 
         if (!$kelas || !$start || !$end) {
             return redirect()->to('dashboard/admin/rekap-absensi/kelas');
@@ -381,6 +408,9 @@ class AdminAbsensi extends BaseController
         if ($hasUnity && $unity !== '') {
             $builder->where('m.unity', $unity);
         }
+        if ($hasJenisPresensi && $mode !== 'all') {
+            $builder->where('a.jenis_presensi', $mode);
+        }
 
         $query = $builder
             ->orderBy('a.tanggal', 'DESC')
@@ -409,7 +439,18 @@ class AdminAbsensi extends BaseController
             'guru'     => $guru,
             'lokasi'   => $lokasi,
             'unity'    => $unity,
+            'mode'     => $mode,
             'guruList' => $guruList
         ]);
+    }
+
+    private function resolvePresensiMode($mode): string
+    {
+        $value = strtolower(trim((string) $mode));
+        if (!in_array($value, ['all', 'reguler', 'unity'], true)) {
+            return 'all';
+        }
+
+        return $value;
     }
 }

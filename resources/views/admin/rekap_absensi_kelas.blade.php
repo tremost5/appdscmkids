@@ -28,13 +28,13 @@ $kelasAktif = $kelas ?? '';
 <ul class="nav nav-tabs mb-3">
   <li class="nav-item">
     <a class="nav-link"
-       href="<?= base_url('admin/rekap-absensi') ?>?start=<?= esc($start) ?>&end=<?= esc($end) ?>">
+       href="<?= base_url('admin/rekap-absensi') ?>?start=<?= esc($start) ?>&end=<?= esc($end) ?>&mode=<?= esc($mode ?? 'all') ?>">
       📅 Per Tanggal
     </a>
   </li>
   <li class="nav-item">
     <a class="nav-link active"
-       href="<?= base_url('admin/rekap-absensi/kelas') ?>?start=<?= esc($start) ?>&end=<?= esc($end) ?>">
+       href="<?= base_url('admin/rekap-absensi/kelas') ?>?start=<?= esc($start) ?>&end=<?= esc($end) ?>&mode=<?= esc($mode ?? 'all') ?>">
       🏫 Per Kelas
     </a>
   </li>
@@ -84,6 +84,15 @@ $kelasAktif = $kelas ?? '';
     </select>
   </div>
 
+  <div class="col-4 col-md-2 mb-2">
+    <label class="small">Jenis</label>
+    <select name="mode" class="form-control form-control-sm">
+      <option value="all" <?= (($mode ?? 'all')==='all')?'selected':'' ?>>Semua</option>
+      <option value="reguler" <?= (($mode ?? '')==='reguler')?'selected':'' ?>>Reguler</option>
+      <option value="unity" <?= (($mode ?? '')==='unity')?'selected':'' ?>>Unity</option>
+    </select>
+  </div>
+
   <div class="col-md-2 mb-2 d-flex align-items-end">
     <button class="btn btn-primary btn-sm btn-block">
       🔍 Cari
@@ -125,7 +134,8 @@ $kelasAktif = $kelas ?? '';
 ?kelas=<?= esc($r['kelas_id']) ?>
 &start=<?= esc($start) ?>
 &end=<?= esc($end) ?>
-&unity=<?= esc($unity ?? '') ?>"
+&unity=<?= esc($unity ?? '') ?>
+&mode=<?= esc($mode ?? 'all') ?>"
 class="btn btn-sm btn-outline-primary">
   📂 Detail
 </a>

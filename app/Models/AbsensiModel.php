@@ -12,6 +12,8 @@ class AbsensiModel extends Model
     protected $allowedFields = [
         'guru_id',
         'lokasi_id',
+        'lokasi_text',
+        'jenis_presensi',
         'tanggal',
         'jam',
         'selfie_foto'

@@ -55,6 +55,8 @@ public function guru()
     $db        = \Config\Database::connect();
     $userModel = new \App\Models\UserModel();
     $muridModel = new \App\Models\MuridModel();
+    $mode = $this->resolvePresensiMode($this->request->getGet('mode'));
+    $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
 
     // ==========================
     // UPDATE LAST LOGIN
@@ -97,18 +99,25 @@ public function guru()
     // ==========================
     // 🏆 RANKING HADIR (TOP 5)
     // ==========================
-    $ranking = $db->query("
+    $rankingSql = "
         SELECT m.id, m.nama_depan, m.nama_belakang, m.foto,
                COUNT(a.id) AS total_hadir
         FROM murid m
         JOIN absensi_detail a ON a.murid_id = m.id
+        JOIN absensi absn ON absn.id = a.absensi_id
         WHERE a.status = 'hadir'
-          AND MONTH(a.tanggal) = MONTH(CURDATE())
-          AND YEAR(a.tanggal) = YEAR(CURDATE())
+          AND MONTH(absn.tanggal) = MONTH(CURDATE())
+          AND YEAR(absn.tanggal) = YEAR(CURDATE())
+    ";
+    if ($hasJenisPresensi && $mode !== 'all') {
+        $rankingSql .= " AND absn.jenis_presensi = ".$db->escape($mode)." ";
+    }
+    $rankingSql .= "
         GROUP BY m.id, m.nama_depan, m.nama_belakang, m.foto
         ORDER BY total_hadir DESC
         LIMIT 5
-    ")->getResultArray();
+    ";
+    $ranking = $db->query($rankingSql)->getResultArray();
 
     // ==========================
     // 📚 MATERI TERBARU (GLOBAL)
@@ -130,7 +139,11 @@ public function guru()
         ->where('a.guru_id', $userId)
         ->where('d.status', 'hadir')
         ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
-        ->where('a.tanggal <=', date('Y-m-d'))
+        ->where('a.tanggal <=', date('Y-m-d'));
+    if ($hasJenisPresensi && $mode !== 'all') {
+        $weeklyRows->where('a.jenis_presensi', $mode);
+    }
+    $weeklyRows = $weeklyRows
         ->groupBy('a.tanggal')
         ->orderBy('a.tanggal', 'ASC')
         ->get()
@@ -161,7 +174,11 @@ public function guru()
         ->where('a.guru_id', $userId)
         ->where('d.status', 'hadir')
         ->where('a.tanggal >=', $monthStart)
-        ->where('a.tanggal <=', $today)
+        ->where('a.tanggal <=', $today);
+    if ($hasJenisPresensi && $mode !== 'all') {
+        $monthlyRows->where('a.jenis_presensi', $mode);
+    }
+    $monthlyRows = $monthlyRows
         ->groupBy('a.tanggal')
         ->orderBy('a.tanggal', 'ASC')
         ->get()
@@ -248,6 +265,7 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
         'monthlyTotal'    => $monthlyTotal,
         'avgWeekly'       => $avgWeekly,
         'unitySummary'    => $unitySummary,
+        'mode'            => $mode,
     ]);
 }
 
@@ -255,10 +273,12 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
     /* =====================================================
        DASHBOARD ADMIN
     ===================================================== */
-    public function admin()
+public function admin()
 {
     $now = time();
     $today = date('Y-m-d');
+    $mode = $this->resolvePresensiMode($this->request->getGet('mode'));
+    $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
 
     /* ===============================
        ABSENSI DOBEL HARI INI
@@ -354,13 +374,18 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
     /* ===============================
        GRAFIK HADIR MINGGU INI
     =============================== */
-    $weeklyRows = $this->db->table('absensi_detail')
-        ->select('tanggal, COUNT(id) as total')
-        ->where('status', 'hadir')
-        ->where('tanggal >=', date('Y-m-d', strtotime('-6 days')))
-        ->where('tanggal <=', $today)
-        ->groupBy('tanggal')
-        ->orderBy('tanggal', 'ASC')
+    $weeklyRows = $this->db->table('absensi_detail ad')
+        ->select('a.tanggal, COUNT(ad.id) as total')
+        ->join('absensi a', 'a.id = ad.absensi_id')
+        ->where('ad.status', 'hadir')
+        ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
+        ->where('a.tanggal <=', $today);
+    if ($hasJenisPresensi && $mode !== 'all') {
+        $weeklyRows->where('a.jenis_presensi', $mode);
+    }
+    $weeklyRows = $weeklyRows
+        ->groupBy('a.tanggal')
+        ->orderBy('a.tanggal', 'ASC')
         ->get()
         ->getResultArray();
 
@@ -381,13 +406,18 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
        GRAFIK HADIR BULAN INI
     =============================== */
     $monthStart = date('Y-m-01');
-    $monthlyRows = $this->db->table('absensi_detail')
-        ->select('tanggal, COUNT(id) as total')
-        ->where('status', 'hadir')
-        ->where('tanggal >=', $monthStart)
-        ->where('tanggal <=', $today)
-        ->groupBy('tanggal')
-        ->orderBy('tanggal', 'ASC')
+    $monthlyRows = $this->db->table('absensi_detail ad')
+        ->select('a.tanggal, COUNT(ad.id) as total')
+        ->join('absensi a', 'a.id = ad.absensi_id')
+        ->where('ad.status', 'hadir')
+        ->where('a.tanggal >=', $monthStart)
+        ->where('a.tanggal <=', $today);
+    if ($hasJenisPresensi && $mode !== 'all') {
+        $monthlyRows->where('a.jenis_presensi', $mode);
+    }
+    $monthlyRows = $monthlyRows
+        ->groupBy('a.tanggal')
+        ->orderBy('a.tanggal', 'ASC')
         ->get()
         ->getResultArray();
 
@@ -443,6 +473,7 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
         'totalHadirBulan' => $totalHadirBulan,
         'avgHarian'       => $avgHarian,
         'unitySummary'    => $unitySummary,
+        'mode'            => $mode,
     ]);
 }
 
@@ -479,5 +510,15 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
     public function superadmin()
     {
         return redirect()->to('/superadmin/dashboard');
+    }
+
+    private function resolvePresensiMode($mode): string
+    {
+        $value = strtolower(trim((string) $mode));
+        if (!in_array($value, ['all', 'reguler', 'unity'], true)) {
+            return 'all';
+        }
+
+        return $value;
     }
 }

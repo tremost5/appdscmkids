@@ -3,6 +3,17 @@
 
 <h1 class="mb-4">Statistik Kehadiran</h1>
 
+<form method="get" class="mb-3">
+    <div style="max-width:240px">
+        <label class="small">Jenis Presensi</label>
+        <select name="mode" class="form-control form-control-sm" onchange="this.form.submit()">
+            <option value="all" <?= (($mode ?? 'all')==='all')?'selected':'' ?>>Semua</option>
+            <option value="reguler" <?= (($mode ?? '')==='reguler')?'selected':'' ?>>Reguler</option>
+            <option value="unity" <?= (($mode ?? '')==='unity')?'selected':'' ?>>Unity</option>
+        </select>
+    </div>
+</form>
+
 <div class="row">
     <div class="col-md-4">
         <div class="card bg-primary text-white">

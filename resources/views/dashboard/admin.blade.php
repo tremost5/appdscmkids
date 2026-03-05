@@ -120,6 +120,11 @@
     <div class="admin-hero">
       <h3>Dashboard Admin</h3>
       <small>Kontrol aktivitas guru, presensi, dan monitoring operasional harian.</small>
+      <div class="mt-2 d-flex flex-wrap" style="gap:8px">
+        <a class="btn btn-sm <?= (($mode ?? 'all')==='all')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/admin?mode=all') ?>">Semua</a>
+        <a class="btn btn-sm <?= (($mode ?? '')==='reguler')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/admin?mode=reguler') ?>">Reguler</a>
+        <a class="btn btn-sm <?= (($mode ?? '')==='unity')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/admin?mode=unity') ?>">Unity</a>
+      </div>
     </div>
 
     <div id="alert-absensi-dobel" class="alert alert-danger mb-0 <?= (int) ($dobelHariIni ?? 0) > 0 ? '' : 'd-none' ?>">

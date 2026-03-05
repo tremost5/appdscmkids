@@ -97,6 +97,11 @@
     <div class="super-hero">
       <h3>Superadmin Control Center</h3>
       <small>Kontrol menyeluruh pengguna, keamanan sistem, dan kualitas data presensi.</small>
+      <div class="mt-2 d-flex flex-wrap" style="gap:8px">
+        <a class="btn btn-sm <?= (($mode ?? 'all')==='all')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('superadmin/dashboard?mode=all') ?>">Semua</a>
+        <a class="btn btn-sm <?= (($mode ?? '')==='reguler')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('superadmin/dashboard?mode=reguler') ?>">Reguler</a>
+        <a class="btn btn-sm <?= (($mode ?? '')==='unity')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('superadmin/dashboard?mode=unity') ?>">Unity</a>
+      </div>
     </div>
 
     <div class="kpi-grid">

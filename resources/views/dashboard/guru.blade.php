@@ -237,6 +237,11 @@
         Login terakhir:
         <?= !empty($guru['last_login']) ? date('d M Y H:i', strtotime($guru['last_login'])) : '-' ?>
       </small>
+      <div class="mt-2 d-flex flex-wrap" style="gap:8px">
+        <a class="btn btn-sm <?= (($mode ?? 'all')==='all')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/guru?mode=all') ?>">Semua</a>
+        <a class="btn btn-sm <?= (($mode ?? '')==='reguler')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/guru?mode=reguler') ?>">Reguler</a>
+        <a class="btn btn-sm <?= (($mode ?? '')==='unity')?'btn-light':'btn-outline-light' ?>" href="<?= base_url('dashboard/guru?mode=unity') ?>">Unity</a>
+      </div>
     </div>
 
     <div class="kpi-grid">

@@ -123,12 +123,12 @@ class Absensi extends BaseController
 
     public function simpan()
     {
-        return $this->doSimpan();
+        return $this->doSimpan('reguler');
     }
 
     public function simpanUnity()
     {
-        return $this->doSimpan();
+        return $this->doSimpan('unity');
     }
 
     public function dobel()
@@ -139,9 +139,10 @@ class Absensi extends BaseController
         ]);
     }
 
-    private function doSimpan()
+    private function doSimpan(string $jenisPresensi = 'reguler')
     {
         try {
+            $jenisPresensi = in_array($jenisPresensi, ['reguler', 'unity'], true) ? $jenisPresensi : 'reguler';
             $tanggal = date('Y-m-d');
             $jamInput = trim((string) $this->request->getPost('jam_preset'));
             $allowedJam = ['08:00:00', '10:00:00'];
@@ -190,6 +191,7 @@ class Absensi extends BaseController
                 'guru_id' => $guruId,
                 'lokasi_id' => $lokasiId,
                 'lokasi_text' => $lokasiText,
+                'jenis_presensi' => $jenisPresensi,
                 'tanggal' => $tanggal,
                 'jam' => $jam,
                 'selfie_foto' => $selfieName,

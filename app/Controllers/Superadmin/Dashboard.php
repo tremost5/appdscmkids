@@ -10,6 +10,8 @@ class Dashboard extends BaseController
     public function index()
     {
         $db = Database::connect();
+        $mode = $this->resolvePresensiMode($this->request->getGet('mode'));
+        $hasJenisPresensi = $this->hasTableColumn('absensi', 'jenis_presensi');
 
         // ===== USER STATS =====
         $total_users = $db->table('users')->countAllResults();
@@ -21,14 +23,21 @@ class Dashboard extends BaseController
         // ===== ABSENSI STATS =====
         $today = date('Y-m-d');
 
-        $absen_hari_ini = $db->table('absensi')
-            ->where('tanggal', $today)
-            ->countAllResults();
+        $absenHariIniBuilder = $db->table('absensi')
+            ->where('tanggal', $today);
+        if ($hasJenisPresensi && $mode !== 'all') {
+            $absenHariIniBuilder->where('jenis_presensi', $mode);
+        }
+        $absen_hari_ini = $absenHariIniBuilder->countAllResults();
 
-        $absen_dobel = $db->table('absensi_detail')
-            ->where('tanggal', $today)
-            ->where('status', 'dobel')
-            ->countAllResults();
+        $absenDobelBuilder = $db->table('absensi_detail ad')
+            ->join('absensi a', 'a.id = ad.absensi_id')
+            ->where('ad.tanggal', $today)
+            ->where('ad.status', 'dobel');
+        if ($hasJenisPresensi && $mode !== 'all') {
+            $absenDobelBuilder->where('a.jenis_presensi', $mode);
+        }
+        $absen_dobel = $absenDobelBuilder->countAllResults();
 
         $total_murid = $db->table('murid')->countAllResults();
         $unitySummary = [];
@@ -45,13 +54,18 @@ class Dashboard extends BaseController
         }
 
         // ===== GRAFIK HADIR MINGGU INI (GLOBAL) =====
-        $weeklyRows = $db->table('absensi_detail')
-            ->select('tanggal, COUNT(id) as total')
-            ->where('status', 'hadir')
-            ->where('tanggal >=', date('Y-m-d', strtotime('-6 days')))
-            ->where('tanggal <=', $today)
-            ->groupBy('tanggal')
-            ->orderBy('tanggal', 'ASC')
+        $weeklyRows = $db->table('absensi_detail ad')
+            ->select('a.tanggal, COUNT(ad.id) as total')
+            ->join('absensi a', 'a.id = ad.absensi_id')
+            ->where('ad.status', 'hadir')
+            ->where('a.tanggal >=', date('Y-m-d', strtotime('-6 days')))
+            ->where('a.tanggal <=', $today);
+        if ($hasJenisPresensi && $mode !== 'all') {
+            $weeklyRows->where('a.jenis_presensi', $mode);
+        }
+        $weeklyRows = $weeklyRows
+            ->groupBy('a.tanggal')
+            ->orderBy('a.tanggal', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -114,6 +128,7 @@ class Dashboard extends BaseController
             'activity'       => $activity,
             'maintenanceActive' => $maintenanceActive,
             'unitySummary'   => $unitySummary,
+            'mode'           => $mode,
         ]);
     }
 
@@ -200,5 +215,15 @@ class Dashboard extends BaseController
                 'hash' => csrf_hash(),
             ],
         ]);
+    }
+
+    private function resolvePresensiMode($mode): string
+    {
+        $value = strtolower(trim((string) $mode));
+        if (!in_array($value, ['all', 'reguler', 'unity'], true)) {
+            return 'all';
+        }
+
+        return $value;
     }
 }

@@ -29,13 +29,13 @@
      ⬅️ Kembali
   </a>
 
-  <a href="<?= base_url('admin/rekap-absensi/export/pdf/'.$tanggal) ?>?unity=<?= esc($unity ?? '') ?>"
+  <a href="<?= base_url('admin/rekap-absensi/export/pdf/'.$tanggal) ?>?unity=<?= esc($unity ?? '') ?>&mode=<?= esc($mode ?? 'all') ?>"
    class="btn btn-danger btn-sm">
     <i class="fas fa-file-pdf"></i>
      📄 PDF
   </a>
 
-  <a href="<?= base_url('admin/rekap-absensi/export/excel/'.$tanggal) ?>?unity=<?= esc($unity ?? '') ?>"
+  <a href="<?= base_url('admin/rekap-absensi/export/excel/'.$tanggal) ?>?unity=<?= esc($unity ?? '') ?>&mode=<?= esc($mode ?? 'all') ?>"
    class="btn btn-success btn-sm">
     <i class="fas fa-file-excel"></i>
      📊 Excel

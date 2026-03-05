@@ -32,6 +32,7 @@ $mapLokasi = [
   <input type="hidden" name="kelas" value="<?= esc($kelas) ?>">
   <input type="hidden" name="start" value="<?= esc($start) ?>">
   <input type="hidden" name="end" value="<?= esc($end) ?>">
+  <input type="hidden" name="mode" value="<?= esc($mode ?? 'all') ?>">
 
   <div class="col-md-3 mb-2">
     <label>Guru</label>
@@ -111,7 +112,7 @@ $mapLokasi = [
 </table>
 </div>
 
-<a href="<?= base_url('admin/rekap-absensi/kelas') ?>?start=<?= esc($start) ?>&end=<?= esc($end) ?>&unity=<?= esc($unity ?? '') ?>"
+<a href="<?= base_url('admin/rekap-absensi/kelas') ?>?start=<?= esc($start) ?>&end=<?= esc($end) ?>&unity=<?= esc($unity ?? '') ?>&mode=<?= esc($mode ?? 'all') ?>"
    class="btn btn-secondary btn-sm mt-3">
   ⬅️ Kembali
 </a>

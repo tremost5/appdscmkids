@@ -29,7 +29,7 @@ $mapKelas = [
   </li>
   <li class="nav-item">
     <a class="nav-link"
-       href="<?= base_url('admin/rekap-absensi/kelas') ?>?start=<?= esc($start ?? '') ?>&end=<?= esc($end ?? '') ?>">
+       href="<?= base_url('admin/rekap-absensi/kelas') ?>?start=<?= esc($start ?? '') ?>&end=<?= esc($end ?? '') ?>&mode=<?= esc($mode ?? 'all') ?>">
       🏫 Per Kelas
     </a>
   </li>
@@ -75,6 +75,15 @@ $mapKelas = [
     </select>
   </div>
 
+  <div class="col-4 col-md-2 mb-2">
+    <label class="small">Jenis</label>
+    <select name="mode" class="form-control form-control-sm">
+      <option value="all" <?= (($mode ?? 'all')==='all')?'selected':'' ?>>Semua</option>
+      <option value="reguler" <?= (($mode ?? '')==='reguler')?'selected':'' ?>>Reguler</option>
+      <option value="unity" <?= (($mode ?? '')==='unity')?'selected':'' ?>>Unity</option>
+    </select>
+  </div>
+
   <div class="col-md-2 mb-2 d-flex align-items-end">
     <button class="btn btn-primary btn-sm btn-block">
       🔍 Cari
@@ -103,7 +112,7 @@ $mapKelas = [
           👨‍🏫 <?= $r['total_guru'] ?> guru
         </div>
 
-        <a href="<?= base_url('admin/rekap-absensi/detail/'.$r['tanggal']) ?>?kelas=<?= esc($kelas ?? '') ?>&unity=<?= esc($unity ?? '') ?>"
+        <a href="<?= base_url('admin/rekap-absensi/detail/'.$r['tanggal']) ?>?kelas=<?= esc($kelas ?? '') ?>&unity=<?= esc($unity ?? '') ?>&mode=<?= esc($mode ?? 'all') ?>"
            class="btn btn-sm btn-outline-primary mt-2">
           📂 Lihat Detail
         </a>
