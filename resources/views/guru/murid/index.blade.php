@@ -28,6 +28,15 @@
 
 <section class="content">
 
+<?php $unityLegend = unityMetaMap(); ?>
+<div class="mb-2 d-flex flex-wrap align-items-center" style="gap:10px">
+  <?php foreach ($unityLegend as $unityName => $meta): ?>
+    <span class="badge badge-light border px-2 py-1" style="font-size:12px">
+      <?= unityBadge($unityName) ?> <span class="ml-1"><?= esc($unityName) ?></span>
+    </span>
+  <?php endforeach; ?>
+</div>
+
 <div class="row mb-3 align-items-end">
   <div class="col-md-4 mb-2">
     <input id="searchMurid" class="form-control" placeholder="Ketik nama / panggilan murid...">
