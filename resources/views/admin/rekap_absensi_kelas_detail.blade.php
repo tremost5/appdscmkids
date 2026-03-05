@@ -5,7 +5,7 @@
 $mapKelas = [
   1=>'PG',2=>'TKA',3=>'TKB',
   4=>'1',5=>'2',6=>'3',
-  7=>'4',8=>'5',9=>'6'
+  7=>'4',8=>'5',9=>'6',11=>'TR'
 ];
 
 $mapLokasi = [
@@ -57,6 +57,18 @@ $mapLokasi = [
     </select>
   </div>
 
+  <div class="col-md-3 mb-2">
+    <label>Unity</label>
+    <select name="unity" class="form-control form-control-sm">
+      <option value="">Semua Unity</option>
+      <?php foreach (array_keys(unityMetaMap()) as $u): ?>
+        <option value="<?= esc($u) ?>" <?= (($unity ?? '')===$u)?'selected':'' ?>>
+          <?= esc($u) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+
   <div class="col-md-2 mb-2 d-flex align-items-end">
     <button class="btn btn-primary btn-sm btn-block">
       🔍 Filter
@@ -78,6 +90,7 @@ $mapLokasi = [
     <tr>
       <th>Tanggal</th>
       <th>Nama Siswa</th>
+      <th>Unity</th>
       <th>Jam</th>
       <th>Lokasi</th>
       <th>Guru</th>
@@ -88,6 +101,7 @@ $mapLokasi = [
     <tr>
       <td><?= esc($r['tanggal']) ?></td>
       <td><?= esc($r['nama_depan'].' '.$r['nama_belakang']) ?></td>
+      <td><?= unityBadge($r['unity'] ?? '') ?> <?= esc($r['unity'] ?? '-') ?></td>
       <td><?= esc($r['jam']) ?></td>
       <td><?= esc($r['nama_lokasi'] ?? '-') ?></td>
     <td><?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?></td>
@@ -97,7 +111,7 @@ $mapLokasi = [
 </table>
 </div>
 
-<a href="<?= base_url('admin/rekap-absensi/kelas') ?>?start=<?= esc($start) ?>&end=<?= esc($end) ?>"
+<a href="<?= base_url('admin/rekap-absensi/kelas') ?>?start=<?= esc($start) ?>&end=<?= esc($end) ?>&unity=<?= esc($unity ?? '') ?>"
    class="btn btn-secondary btn-sm mt-3">
   ⬅️ Kembali
 </a>

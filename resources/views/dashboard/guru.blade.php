@@ -307,7 +307,7 @@
                       data-tanggal-lahir="<?= esc($tanggalLahirFmt, 'attr') ?>"
                       data-foto="<?= esc($fotoMuridUrl, 'attr') ?>"
                     >
-                      <?= esc($namaMurid) ?>
+                      <?= esc($namaMurid) ?> <?= unityBadge($u['unity'] ?? '') ?>
                     </button>
                     <div class="chart-sub">Kelas <?= esc($u['nama_kelas'] ?? '-') ?></div>
                   </div>
@@ -336,6 +336,19 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </div>
+
+        <div class="chart-card">
+          <h6 class="card-head"><span class="head-icon head-icon--week"><i class="fas fa-star"></i></span>Distribusi Unity Aktif</h6>
+          <?php if (empty($unitySummary)): ?>
+            <div class="chart-sub mt-2">Belum ada data unity.</div>
+          <?php else: ?>
+            <?php foreach ($unitySummary as $u): ?>
+              <div class="list-item">
+                <div class="chart-sub"><?= unityBadge($u['unity'] ?? '') ?> <?= esc($u['unity'] ?? '-') ?>: <?= (int) ($u['total'] ?? 0) ?> murid</div>
               </div>
             <?php endforeach; ?>
           <?php endif; ?>

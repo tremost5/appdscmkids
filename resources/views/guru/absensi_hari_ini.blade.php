@@ -99,13 +99,14 @@ $sisa = max(0, 10800 - (time() - ($refTime ?: time())));
 <tr>
   <th>Nama Murid</th>
   <th>Kelas</th>
+  <th>Unity</th>
   <th>Status</th>
   <th>Aksi</th>
 </tr>
 </thead>
 <tbody>
 <?php
-$label = [1=>'PG',2=>'TKA',3=>'TKB',4=>'1',5=>'2',6=>'3',7=>'4',8=>'5',9=>'6'];
+$label = [1=>'PG',2=>'TKA',3=>'TKB',4=>'1',5=>'2',6=>'3',7=>'4',8=>'5',9=>'6',11=>'TR'];
 foreach($detail as $d):
   $namaLengkap = trim(($d['nama_depan'] ?? '').' '.($d['nama_belakang'] ?? ''));
   $panggilan   = $d['panggilan'] ?? '';
@@ -116,10 +117,11 @@ foreach($detail as $d):
 <td>
   <span class="guru-text-primary" style="cursor:pointer"
         onclick="showFoto('<?= base_url('uploads/murid/'.($d['foto'] ?? 'default_murid.png')) ?>')">
-    <?= esc($displayNama) ?>
+    <?= esc($displayNama) ?> <?= unityBadge($d['unity'] ?? '') ?>
   </span>
 </td>
 <td><?= esc($kelasLabel) ?></td>
+<td><?= esc($d['unity'] ?? '-') ?></td>
 <td>
   <?php if(($d['status'] ?? '')==='hadir'): ?>
     <span class="badge guru-badge-hadir">Hadir</span>

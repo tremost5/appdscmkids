@@ -31,6 +31,15 @@ class Dashboard extends BaseController
             ->countAllResults();
 
         $total_murid = $db->table('murid')->countAllResults();
+        $unitySummary = $db->table('murid')
+            ->select('unity, COUNT(id) as total')
+            ->where('status', 'aktif')
+            ->where('unity IS NOT NULL', null, false)
+            ->where('unity <>', '')
+            ->groupBy('unity')
+            ->orderBy('unity', 'ASC')
+            ->get()
+            ->getResultArray();
 
         // ===== GRAFIK HADIR MINGGU INI (GLOBAL) =====
         $weeklyRows = $db->table('absensi_detail')
@@ -101,6 +110,7 @@ class Dashboard extends BaseController
             'roleData'       => [$roleMap[1], $roleMap[2], $roleMap[3]],
             'activity'       => $activity,
             'maintenanceActive' => $maintenanceActive,
+            'unitySummary'   => $unitySummary,
         ]);
     }
 

@@ -88,7 +88,7 @@
           data-gereja="<?= esc($m['gereja_asal'] ?? '-') ?>"
           data-unity="<?= esc($m['unity'] ?? '-') ?>"
           data-alamat="<?= esc($m['alamat'] ?? '-') ?>">
-      <?= esc($namaLengkap) ?>
+      <?= esc($namaLengkap) ?> <?= unityBadge($m['unity'] ?? '') ?>
     </span>
   </td>
 

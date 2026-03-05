@@ -28,7 +28,7 @@ class MenuAccessFilter implements FilterInterface
         if ($role === 3) {
             $redirect = '/dashboard/guru';
 
-            if (str_starts_with($path, 'guru/absensi') || str_starts_with($path, 'guru/absensi-hari-ini')) {
+            if (str_starts_with($path, 'guru/absensi') || str_starts_with($path, 'guru/absensi-hari-ini') || str_starts_with($path, 'guru/unity')) {
                 $blocked = (int) setting('guru_absen', 1) !== 1;
             } elseif (str_starts_with($path, 'guru/murid')) {
                 $blocked = (int) setting('guru_murid', 1) !== 1;

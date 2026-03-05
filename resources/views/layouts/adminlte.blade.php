@@ -90,6 +90,7 @@ if ($role == 2) { // ADMIN
       'materi' => 'Materi',
       'kegiatan' => 'Kegiatan',
       'absensi' => 'Presensi',
+      'unity' => 'Unity',
       'absensi-hari-ini' => 'Presensi Hari Ini',
       'absensi-dobel' => 'Presensi Dobel',
       'naik-kelas' => 'Naik Kelas',
@@ -233,6 +234,9 @@ if ($role == 2) { // ADMIN
   </a>
   <a href="<?= base_url('guru/absensi') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'guru/absensi') ? 'active' : '' ?>">
     <i class="fas fa-clipboard-check"></i><span>Presensi</span>
+  </a>
+  <a href="<?= base_url('guru/unity') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'guru/unity') ? 'active' : '' ?>">
+    <i class="fas fa-star"></i><span>Unity</span>
   </a>
   <a href="<?= base_url('guru/murid') ?>" class="mobile-bottom-nav__link <?= str_contains($uri, 'guru/murid') ? 'active' : '' ?>">
     <i class="fas fa-user-graduate"></i><span>Murid</span>

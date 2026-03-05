@@ -5,7 +5,7 @@
 $mapKelas = [
   1=>'PG',2=>'TKA',3=>'TKB',
   4=>'1',5=>'2',6=>'3',
-  7=>'4',8=>'5',9=>'6'
+  7=>'4',8=>'5',9=>'6',11=>'TR'
 ];
 ?>
 
@@ -63,6 +63,18 @@ $mapKelas = [
     </select>
   </div>
 
+  <div class="col-4 col-md-2 mb-2">
+    <label class="small">Unity</label>
+    <select name="unity" class="form-control form-control-sm">
+      <option value="">Semua</option>
+      <?php foreach (array_keys(unityMetaMap()) as $u): ?>
+        <option value="<?= esc($u) ?>" <?= (($unity ?? '')===$u)?'selected':'' ?>>
+          <?= esc($u) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+
   <div class="col-md-2 mb-2 d-flex align-items-end">
     <button class="btn btn-primary btn-sm btn-block">
       🔍 Cari
@@ -91,7 +103,7 @@ $mapKelas = [
           👨‍🏫 <?= $r['total_guru'] ?> guru
         </div>
 
-        <a href="<?= base_url('admin/rekap-absensi/detail/'.$r['tanggal']) ?>"
+        <a href="<?= base_url('admin/rekap-absensi/detail/'.$r['tanggal']) ?>?kelas=<?= esc($kelas ?? '') ?>&unity=<?= esc($unity ?? '') ?>"
            class="btn btn-sm btn-outline-primary mt-2">
           📂 Lihat Detail
         </a>

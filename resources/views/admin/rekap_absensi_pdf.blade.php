@@ -90,6 +90,7 @@ table.data th {
     <th>No</th>
     <th>Nama</th>
     <th>Kelas</th>
+    <th>Unity</th>
     <th>Status</th>
     <th>Lokasi</th>
     <th>Jam</th>
@@ -99,7 +100,7 @@ table.data th {
 <tbody>
 
 <?php if (empty($data)): ?>
-<tr><td colspan="7" align="center">Tidak ada data</td></tr>
+<tr><td colspan="8" align="center">Tidak ada data</td></tr>
 <?php endif; ?>
 
 <?php $no=1; foreach ($data as $d): ?>
@@ -107,6 +108,7 @@ table.data th {
     <td align="center"><?= $no++ ?></td>
     <td><?= esc(trim($d['nama_depan'].' '.$d['nama_belakang'])) ?></td>
     <td align="center"><?= esc($d['nama_kelas'] ?? '-') ?></td>
+    <td align="center"><?= esc($d['unity'] ?? '-') ?></td>
     <td align="center">HADIR</td>
     <td align="center"><?= esc($d['nama_lokasi'] ?? '-') ?></td>
     <td align="center"><?= esc($d['jam'] ?? '-') ?></td>

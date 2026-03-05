@@ -66,6 +66,16 @@ $canKegiatan = $isSuperadmin || (int) setting('guru_kegiatan', 1) === 1;
 </li>
 <?php endif; ?>
 
+<?php if ($canAbsensi): ?>
+<li class="nav-item">
+  <a href="<?= base_url('guru/unity') ?>"
+     class="nav-link <?= str_contains(uri_string(),'guru/unity')?'active':'' ?>">
+    <i class="nav-icon fas fa-star"></i>
+    <p>Unity</p>
+  </a>
+</li>
+<?php endif; ?>
+
 <!-- ================= KEGIATAN ================= -->
 <?php if ($canKegiatan): ?>
 <li class="nav-item">

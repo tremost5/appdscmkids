@@ -176,6 +176,9 @@ Route::prefix('guru')->middleware(['auth', 'role:3', 'menuaccess'])->group(funct
     Route::get('/absensi/tampilkan', [Absensi::class, 'tampilkan']);
     Route::match(['get', 'post'], '/absensi/simpan', [Absensi::class, 'simpan']);
     Route::get('/absensi/dobel', [Absensi::class, 'dobel']);
+    Route::get('/unity', [Absensi::class, 'unityStep1']);
+    Route::get('/unity/tampilkan', [Absensi::class, 'unityTampilkan']);
+    Route::match(['get', 'post'], '/unity/simpan', [Absensi::class, 'simpanUnity']);
 
     Route::get('/absensi-hari-ini', [Absensi::class, 'hariIni']);
     Route::post('/absensi-hari-ini/simpan', [Absensi::class, 'simpanEditHariIni']);

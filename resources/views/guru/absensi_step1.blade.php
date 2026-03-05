@@ -56,14 +56,11 @@
 <div class="mb-4">
   <strong class="d-block mb-2">Pilih Kelas</strong>
   <div class="kelas-list">
-    <?php
-    $kelas=[1=>'PG',2=>'TKA',3=>'TKB',4=>'1',5=>'2',6=>'3',7=>'4',8=>'5',9=>'6'];
-    foreach($kelas as $id=>$n):
-    ?>
+    <?php foreach (($kelasGroups ?? []) as $key => $grp): ?>
       <label>
-        <input type="checkbox" name="kelas[]" value="<?= $id ?>"> <?= $n ?>
+        <input type="checkbox" name="kelas[]" value="<?= esc($key) ?>"> <?= esc($grp['label'] ?? $key) ?>
       </label>
-    <?php endforeach ?>
+    <?php endforeach; ?>
   </div>
 </div>
 

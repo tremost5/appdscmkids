@@ -170,6 +170,15 @@
             <?= !empty($maintenanceActive) ? 'Nonaktifkan Maintenance' : 'Aktifkan Maintenance' ?>
           </button>
         </div>
+        <hr>
+        <h6 class="mb-2">Distribusi Unity Aktif</h6>
+        <?php if (empty($unitySummary)): ?>
+          <div class="chart-sub">Belum ada data unity.</div>
+        <?php else: ?>
+          <?php foreach ($unitySummary as $u): ?>
+            <div class="chart-sub mb-1"><?= unityBadge($u['unity'] ?? '') ?> <?= esc($u['unity'] ?? '-') ?>: <?= (int) ($u['total'] ?? 0) ?> murid</div>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </div>
     </div>
   </div>

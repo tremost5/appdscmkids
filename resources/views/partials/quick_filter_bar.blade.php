@@ -32,6 +32,14 @@ if (str_contains($uri, 'rekap-absensi')) {
         ['label' => 'Statistik', 'url' => base_url($statBase)],
     ];
 }
+
+if (str_contains($uri, 'guru/unity')) {
+    $showSearch = true;
+    $quickLinks = [
+        ['label' => 'Presensi', 'url' => base_url('guru/absensi')],
+        ['label' => 'Unity', 'url' => base_url('guru/unity')],
+    ];
+}
 ?>
 
 <?php if ($showSearch || !empty($quickLinks)): ?>

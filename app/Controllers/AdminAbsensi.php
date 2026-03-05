@@ -30,13 +30,15 @@ class AdminAbsensi extends BaseController
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
         $kelas = $this->request->getGet('kelas');
+        $unity = trim((string) $this->request->getGet('unity'));
 
         if (!$start || !$end) {
             return view('admin/rekap_absensi_range', [
                 'rows'  => [],
                 'start' => $start,
                 'end'   => $end,
-                'kelas' => $kelas
+                'kelas' => $kelas,
+                'unity' => $unity
             ]);
         }
 
@@ -68,6 +70,9 @@ class AdminAbsensi extends BaseController
         if ($kelas) {
             $builder->where('m.kelas_id', $kelas);
         }
+        if ($unity !== '') {
+            $builder->where('m.unity', $unity);
+        }
 
         $rows = $builder
             ->groupBy('a.tanggal')
@@ -79,7 +84,8 @@ class AdminAbsensi extends BaseController
             'rows'  => $rows,
             'start' => $start,
             'end'   => $end,
-            'kelas' => $kelas
+            'kelas' => $kelas,
+            'unity' => $unity
         ]);
     }
 
@@ -91,6 +97,7 @@ class AdminAbsensi extends BaseController
         $kelas  = $this->request->getGet('kelas');
         $guru   = $this->request->getGet('guru');
         $lokasi = $this->request->getGet('lokasi');
+        $unity  = trim((string) $this->request->getGet('unity'));
 
         $guruList = $this->db->table('users')
             ->select('id, nama_depan, nama_belakang')
@@ -106,6 +113,7 @@ class AdminAbsensi extends BaseController
                 m.nama_belakang,
                 m.panggilan,
                 m.kelas_id,
+                m.unity,
                 a.jam,
                 a.lokasi_id,
                 u.nama_depan AS guru_depan,
@@ -128,6 +136,9 @@ class AdminAbsensi extends BaseController
 
         if ($lokasi) {
             $builder->where('a.lokasi_id', $lokasi);
+        }
+        if ($unity !== '') {
+            $builder->where('m.unity', $unity);
         }
 
         $rows = $builder
@@ -157,6 +168,7 @@ class AdminAbsensi extends BaseController
             'kelas'    => $kelas,
             'guru'     => $guru,
             'lokasi'   => $lokasi,
+            'unity'    => $unity,
             'guruList' => $guruList
         ]);
     }
@@ -166,12 +178,15 @@ class AdminAbsensi extends BaseController
      * ===================================================== */
     public function export($mode, $tanggal)
     {
+        $unity = trim((string) $this->request->getGet('unity'));
+
         $data = $this->db->table('absensi_detail ad')
             ->select('
                 m.nama_depan,
                 m.nama_belakang,
                 m.panggilan,
                 m.kelas_id,
+                m.unity,
                 k.nama_kelas,
                 a.jam,
                 a.lokasi_id,
@@ -185,7 +200,13 @@ class AdminAbsensi extends BaseController
             ->join('lokasi_ibadah li', 'li.id = a.lokasi_id', 'left')
             ->join('users u', 'u.id = a.guru_id', 'left')
             ->where('ad.status', 'hadir')
-            ->where('a.tanggal', $tanggal)
+            ->where('a.tanggal', $tanggal);
+
+        if ($unity !== '') {
+            $data->where('m.unity', $unity);
+        }
+
+        $data = $data
             ->orderBy('m.kelas_id', 'ASC')
             ->orderBy('m.nama_depan', 'ASC')
             ->get()
@@ -218,11 +239,12 @@ class AdminAbsensi extends BaseController
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=rekap_$tanggal.xls");
 
-        echo "Nama\tKelas\tLokasi\tJam\tGuru\n";
+        echo "Nama\tKelas\tUnity\tLokasi\tJam\tGuru\n";
         foreach ($data as $d) {
             echo
                 $d['display_nama']."\t".
                 ($d['nama_kelas'] ?? '-')."\t".
+                ($d['unity'] ?? '-')."\t".
                 ($d['nama_lokasi'] ?? '-')."\t".
                 ($d['jam'] ?? '-')."\t".
                 trim(($d['guru_depan'] ?? '').' '.($d['guru_belakang'] ?? ''))."\n";
@@ -238,13 +260,15 @@ class AdminAbsensi extends BaseController
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
         $kelas = $this->request->getGet('kelas');
+        $unity = trim((string) $this->request->getGet('unity'));
 
         if (!$start || !$end) {
             return view('admin/rekap_absensi_kelas', [
                 'rows'  => [],
                 'start' => $start,
                 'end'   => $end,
-                'kelas' => $kelas
+                'kelas' => $kelas,
+                'unity' => $unity
             ]);
         }
 
@@ -278,6 +302,9 @@ class AdminAbsensi extends BaseController
         if ($kelas) {
             $builder->where('m.kelas_id', $kelas);
         }
+        if ($unity !== '') {
+            $builder->where('m.unity', $unity);
+        }
 
         $rows = $builder
             ->groupBy('m.kelas_id')
@@ -289,7 +316,8 @@ class AdminAbsensi extends BaseController
             'rows'  => $rows,
             'start' => $start,
             'end'   => $end,
-            'kelas' => $kelas
+            'kelas' => $kelas,
+            'unity' => $unity
         ]);
     }
 
@@ -301,6 +329,7 @@ class AdminAbsensi extends BaseController
         $kelas = $this->request->getGet('kelas');
         $start = $this->request->getGet('start');
         $end   = $this->request->getGet('end');
+        $unity = trim((string) $this->request->getGet('unity'));
 
         if (!$kelas || !$start || !$end) {
             return redirect()->to('dashboard/admin/rekap-absensi/kelas');
@@ -321,6 +350,7 @@ class AdminAbsensi extends BaseController
                 m.nama_depan,
                 m.nama_belakang,
                 m.panggilan,
+                m.unity,
                 a.jam,
                 li.nama_lokasi,
                 u.nama_depan AS guru_depan,
@@ -340,6 +370,9 @@ class AdminAbsensi extends BaseController
 
         if ($lokasi) {
             $builder->where('a.lokasi_id', $lokasi);
+        }
+        if ($unity !== '') {
+            $builder->where('m.unity', $unity);
         }
 
         $query = $builder
@@ -368,6 +401,7 @@ class AdminAbsensi extends BaseController
             'end'      => $end,
             'guru'     => $guru,
             'lokasi'   => $lokasi,
+            'unity'    => $unity,
             'guruList' => $guruList
         ]);
     }

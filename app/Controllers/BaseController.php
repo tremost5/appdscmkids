@@ -7,7 +7,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class BaseController extends Controller
 {
-    protected array $helpers = ['url', 'form'];
+    protected array $helpers = ['url', 'form', 'kelas'];
 
     // 🔥 GLOBAL DATA UNTUK VIEW (AMAN)
     protected array $globalViewData = [];

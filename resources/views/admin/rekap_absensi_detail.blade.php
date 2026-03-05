@@ -29,13 +29,13 @@
      ⬅️ Kembali
   </a>
 
-  <a href="<?= base_url('admin/rekap-absensi/export/pdf/'.$tanggal) ?>"
+  <a href="<?= base_url('admin/rekap-absensi/export/pdf/'.$tanggal) ?>?unity=<?= esc($unity ?? '') ?>"
    class="btn btn-danger btn-sm">
     <i class="fas fa-file-pdf"></i>
      📄 PDF
   </a>
 
-  <a href="<?= base_url('admin/rekap-absensi/export/excel/'.$tanggal) ?>"
+  <a href="<?= base_url('admin/rekap-absensi/export/excel/'.$tanggal) ?>?unity=<?= esc($unity ?? '') ?>"
    class="btn btn-success btn-sm">
     <i class="fas fa-file-excel"></i>
      📊 Excel
@@ -54,6 +54,7 @@
     </strong>
 
     <div class="small text-muted mt-1">
+      <?= unityBadge($r['unity'] ?? '') ?> <?= esc($r['unity'] ?? '-') ?><br>
       🕒 <?= esc($r['jam']) ?> |
       📍 <?= esc($r['lokasi_id']) ?><br>
       👨‍🏫 <?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?>
@@ -69,6 +70,7 @@
 <tr>
   <th>Nama</th>
   <th>Kelas</th>
+  <th>Unity</th>
   <th>Jam</th>
   <th>Lokasi</th>
   <th>Guru</th>
@@ -80,6 +82,7 @@
 <tr class="<?= ($r['dobel'] > 1 ? 'table-danger' : '') ?>">
   <td><?= esc($r['nama_depan'].' '.$r['nama_belakang']) ?></td>
   <td><?= esc($r['kelas_id']) ?></td>
+  <td><?= unityBadge($r['unity'] ?? '') ?> <?= esc($r['unity'] ?? '-') ?></td>
   <td><?= esc($r['jam']) ?></td>
   <td><?= esc($r['lokasi_id']) ?></td>
   <td><?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?></td>

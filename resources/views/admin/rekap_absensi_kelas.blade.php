@@ -5,7 +5,7 @@
 $mapKelas = [
   1=>'PG',2=>'TKA',3=>'TKB',
   4=>'1',5=>'2',6=>'3',
-  7=>'4',8=>'5',9=>'6'
+  7=>'4',8=>'5',9=>'6',11=>'TR'
 ];
 
 $kelasAktif = $kelas ?? '';
@@ -72,6 +72,18 @@ $kelasAktif = $kelas ?? '';
     </select>
   </div>
 
+  <div class="col-4 col-md-2 mb-2">
+    <label class="small">Unity</label>
+    <select name="unity" class="form-control form-control-sm">
+      <option value="">Semua</option>
+      <?php foreach (array_keys(unityMetaMap()) as $u): ?>
+        <option value="<?= esc($u) ?>" <?= (($unity ?? '')===$u)?'selected':'' ?>>
+          <?= esc($u) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+
   <div class="col-md-2 mb-2 d-flex align-items-end">
     <button class="btn btn-primary btn-sm btn-block">
       🔍 Cari
@@ -112,7 +124,8 @@ $kelasAktif = $kelas ?? '';
         <a href="<?= base_url('admin/rekap-absensi/kelas-detail') ?>
 ?kelas=<?= esc($r['kelas_id']) ?>
 &start=<?= esc($start) ?>
-&end=<?= esc($end) ?>"
+&end=<?= esc($end) ?>
+&unity=<?= esc($unity ?? '') ?>"
 class="btn btn-sm btn-outline-primary">
   📂 Detail
 </a>

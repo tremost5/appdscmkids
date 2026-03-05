@@ -31,6 +31,7 @@
       'dashboard' => 'Dashboard',
       'guru' => 'Guru',
       'absensi' => 'Presensi',
+      'unity' => 'Unity',
       'absensi-hari-ini' => 'Presensi Hari Ini',
       'murid' => 'Murid',
       'materi' => 'Materi',

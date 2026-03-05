@@ -180,6 +180,16 @@ public function guru()
     $monthlyTotal = array_sum($monthlyData);
     $avgWeekly = $weeklyTotal > 0 ? round($weeklyTotal / 7, 1) : 0;
 
+    $unitySummary = $db->table('murid')
+        ->select('unity, COUNT(id) as total')
+        ->where('status', 'aktif')
+        ->where('unity IS NOT NULL', null, false)
+        ->where('unity <>', '')
+        ->groupBy('unity')
+        ->orderBy('unity', 'ASC')
+        ->get()
+        ->getResultArray();
+
     // ==========================
     // 🔔 NOTIF DASHBOARD
     // ==========================
@@ -223,6 +233,7 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
         'weeklyTotal'     => $weeklyTotal,
         'monthlyTotal'    => $monthlyTotal,
         'avgWeekly'       => $avgWeekly,
+        'unitySummary'    => $unitySummary,
     ]);
 }
 
@@ -385,6 +396,16 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
     $totalHadirBulan = array_sum($monthlyData);
     $avgHarian = $totalHadirMinggu > 0 ? round($totalHadirMinggu / 7, 1) : 0;
 
+    $unitySummary = $this->db->table('murid')
+        ->select('unity, COUNT(id) as total')
+        ->where('status', 'aktif')
+        ->where('unity IS NOT NULL', null, false)
+        ->where('unity <>', '')
+        ->groupBy('unity')
+        ->orderBy('unity', 'ASC')
+        ->get()
+        ->getResultArray();
+
     return view('dashboard/admin', [
         'total_guru'      => $total,
         'guru_online'     => $online,
@@ -404,6 +425,7 @@ Tuhan Yesus Memberkati {nama} Selalu 😊
         'totalHadirMinggu'=> $totalHadirMinggu,
         'totalHadirBulan' => $totalHadirBulan,
         'avgHarian'       => $avgHarian,
+        'unitySummary'    => $unitySummary,
     ]);
 }
 

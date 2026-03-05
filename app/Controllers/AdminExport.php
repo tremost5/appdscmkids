@@ -40,6 +40,7 @@ class AdminExport extends BaseController
                 m.nama_depan,
                 m.nama_belakang,
                 m.panggilan,
+                m.unity,
                 k.nama_kelas,
                 a.jam,
                 li.nama_lokasi,
@@ -64,7 +65,7 @@ class AdminExport extends BaseController
         echo "DSCM KIDS\n";
         echo "Periode : $start s/d $end\n";
         echo "Dicetak : ".date('d M Y H:i')."\n\n";
-        echo "Tanggal\tNama\tKelas\tJam\tLokasi\tGuru\n";
+        echo "Tanggal\tNama\tKelas\tUnity\tJam\tLokasi\tGuru\n";
 
         foreach ($rows as $r) {
 
@@ -77,6 +78,7 @@ class AdminExport extends BaseController
                 $r['tanggal']."\t".
                 $displayNama."\t".
                 ($r['nama_kelas'] ?? '-')."\t".
+                ($r['unity'] ?? '-')."\t".
                 ($r['jam'] ?? '-')."\t".
                 ($r['nama_lokasi'] ?? '-')."\t".
                 trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))."\n";

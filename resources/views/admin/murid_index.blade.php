@@ -50,7 +50,7 @@
                   <td><?= esc(trim(($m['nama_depan'] ?? '').' '.($m['nama_belakang'] ?? ''))) ?></td>
                   <td><?= esc($m['panggilan'] ?? '-') ?></td>
                   <td><?= esc($m['gereja_asal'] ?? '-') ?></td>
-                  <td><?= esc($m['unity'] ?? '-') ?></td>
+                  <td><?= unityBadge($m['unity'] ?? '') ?> <?= esc($m['unity'] ?? '-') ?></td>
                   <td><?= esc($m['nama_kelas'] ?? '-') ?></td>
                   <td><?= esc($m['status'] ?? '-') ?></td>
                 </tr>

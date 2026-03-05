@@ -187,6 +187,16 @@
             <strong>Presensi Dobel Hari Ini</strong>
             <div class="chart-sub"><?= (int) ($dobelHariIni ?? 0) ?> data belum resolve</div>
           </div>
+          <div class="list-item">
+            <strong>Distribusi Unity Aktif</strong>
+            <?php if (empty($unitySummary)): ?>
+              <div class="chart-sub">Belum ada data unity.</div>
+            <?php else: ?>
+              <?php foreach ($unitySummary as $u): ?>
+                <div class="chart-sub"><?= unityBadge($u['unity'] ?? '') ?> <?= esc($u['unity'] ?? '-') ?>: <?= (int) ($u['total'] ?? 0) ?> murid</div>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
         </div>
 
         <div class="chart-card">

@@ -37,13 +37,16 @@ body.murid-preview-open{overflow:hidden}
 
 <div class="card mb-3 shadow-sm">
   <div class="card-body absensi-hero">
-    <h4 class="mb-0">📋 FORM PRESENSI</h4>
-    <small>Pastikan data benar sebelum menyimpan</small>
+    <h4 class="mb-0"><?= esc($modeTitle ?? '📋 FORM PRESENSI') ?></h4>
+    <small><?= esc($modeSubtitle ?? 'Pastikan data benar sebelum menyimpan') ?></small>
+    <?php if (!empty($activeUnity)): ?>
+      <div class="mt-2"><?= unityBadge($activeUnity) ?> <strong><?= esc($activeUnity) ?></strong></div>
+    <?php endif; ?>
   </div>
 </div>
 
 <form id="formAbsensi"
-      action="<?= base_url('guru/absensi/simpan') ?>"
+      action="<?= esc($saveAction ?? base_url('guru/absensi/simpan')) ?>"
       method="post"
       enctype="multipart/form-data">
 <?= csrf_field() ?>
@@ -62,26 +65,28 @@ body.murid-preview-open{overflow:hidden}
 
   <div class="murid-body">
 <?php
-$label=[1=>'PG',2=>'TKA',3=>'TKB',4=>'1',5=>'2',6=>'3',7=>'4',8=>'5',9=>'6'];
+$label = $kelasLabels ?? [1=>'PG',2=>'TKA',3=>'TKB',4=>'1',5=>'2',6=>'3',7=>'4',8=>'5',9=>'6',11=>'TR'];
 usort($murid,fn($a,$b)=>[$a['kelas_id'],$a['nama_depan']]<=>[$b['kelas_id'],$b['nama_depan']]);
 $grp=[]; foreach($murid as $m){ $grp[$m['kelas_id']][]=$m; }
 
 foreach($grp as $k=>$list):
 ?>
   <div class="kelas-divider" onclick="toggleKelas(this)">
-    🏷️ Kelas <?= $label[$k] ?>
+    🏷️ Kelas <?= esc($label[$k] ?? ('ID '.$k)) ?>
   </div>
   <div class="kelas-content">
   <?php foreach($list as $m): ?>
+    <?php $uBadge = unityBadge($m['unity'] ?? ''); ?>
     <div class="murid-row murid-item">
 	      <div class="nama-murid"
 	           data-nama="<?= esc($m['nama_depan'].' '.$m['nama_belakang']) ?>"
 	           data-panggilan="<?= esc($m['panggilan'] ?: $m['nama_depan']) ?>"
 	           data-foto="<?= esc(base_url('uploads/murid/'.(!empty($m['foto']) ? $m['foto'] : 'default_murid.png'))) ?>"
-	           data-kelas="<?= $label[$k] ?>">
-        <?= esc(($m['panggilan'] ?: $m['nama_depan']).' ('.$m['nama_depan'].' '.$m['nama_belakang'].')') ?>
+	           data-kelas="<?= esc($label[$k] ?? ('ID '.$k)) ?>"
+               data-unity="<?= esc($m['unity'] ?? '-') ?>">
+        <?= esc(($m['panggilan'] ?: $m['nama_depan']).' ('.$m['nama_depan'].' '.$m['nama_belakang'].')') ?> <?= $uBadge ?>
       </div>
-      <div><?= $label[$k] ?></div>
+      <div><?= esc($label[$k] ?? ('ID '.$k)) ?></div>
       <div>
         <input type="checkbox" name="hadir[]" value="<?= $m['id'] ?>">
       </div>
@@ -124,6 +129,7 @@ foreach($grp as $k=>$list):
     <h5 id="muridNama"></h5>
     <div id="muridPanggilan" class="text-muted"></div>
     <div id="muridKelas" class="text-muted"></div>
+    <div id="muridUnity" class="text-muted"></div>
     <button type="button" id="closeMuridPreview" class="btn btn-light btn-sm mt-2">Tutup</button>
   </div>
 </div>
@@ -147,6 +153,7 @@ const muridAvatar = document.getElementById('muridAvatar');
 const muridNama = document.getElementById('muridNama');
 const muridPanggilan = document.getElementById('muridPanggilan');
 const muridKelas = document.getElementById('muridKelas');
+const muridUnity = document.getElementById('muridUnity');
 document.body.appendChild(muridPreview);
 
 function getInitials(name) {
@@ -165,6 +172,7 @@ document.querySelectorAll('.nama-murid').forEach(n=>{
     muridNama.innerText=n.dataset.nama;
     muridPanggilan.innerText='Panggilan: '+(n.dataset.panggilan || '-');
     muridKelas.innerText='Kelas: '+n.dataset.kelas;
+    muridUnity.innerText='Unity: '+(n.dataset.unity || '-');
     muridAvatar.innerText = getInitials(n.dataset.nama).toUpperCase() || '?';
     muridAvatar.style.display = 'flex';
     muridFoto.style.display = 'none';
@@ -287,6 +295,7 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
           <tr>
             <td style="padding:8px">${d.nama_depan} ${d.nama_belakang}</td>
             <td style="padding:8px">${d.nama_kelas}</td>
+            <td style="padding:8px">${d.unity || '-'}</td>
             <td style="padding:8px">${d.lokasi_text}</td>
             <td style="padding:8px">${d.jam}</td>
             <td style="padding:8px">${d.guru_pertama}</td>
@@ -324,6 +333,7 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
                   <tr>
                     <th style="padding:10px;border-bottom:1px solid #ddd">Nama Murid</th>
                     <th style="padding:10px;border-bottom:1px solid #ddd">Kelas</th>
+                    <th style="padding:10px;border-bottom:1px solid #ddd">Unity</th>
                     <th style="padding:10px;border-bottom:1px solid #ddd">Lokasi</th>
                     <th style="padding:10px;border-bottom:1px solid #ddd">Jam</th>
                     <th style="padding:10px;border-bottom:1px solid #ddd">Guru Pertama</th>
@@ -332,7 +342,7 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
                 <tbody>
                   ${rows || `
                     <tr>
-                      <td colspan="5" style="padding:12px;text-align:center;color:#999">
+                      <td colspan="6" style="padding:12px;text-align:center;color:#999">
                         Data tidak ditemukan
                       </td>
                     </tr>
