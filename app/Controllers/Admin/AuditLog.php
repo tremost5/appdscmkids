@@ -34,8 +34,8 @@ class AuditLog extends BaseController
 
         if ($start && $end) {
             $builder
-                ->where('al.created_at', '>=', $start . ' 00:00:00')
-                ->where('al.created_at', '<=', $end . ' 23:59:59');
+                ->where('al.created_at >=', $start . ' 00:00:00')
+                ->where('al.created_at <=', $end . ' 23:59:59');
         }
 
         if ($only) {
@@ -94,8 +94,8 @@ class AuditLog extends BaseController
                 u.nama_belakang
             ')
             ->join('users u', 'u.id = al.user_id', 'left')
-            ->where('al.created_at', '>=', $start . ' 00:00:00')
-            ->where('al.created_at', '<=', $end . ' 23:59:59')
+            ->where('al.created_at >=', $start . ' 00:00:00')
+            ->where('al.created_at <=', $end . ' 23:59:59')
             ->orderBy('al.created_at', 'DESC')
             ->get()
             ->getResultArray();

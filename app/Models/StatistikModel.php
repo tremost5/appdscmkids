@@ -55,15 +55,17 @@ class StatistikModel extends Model
             WHERE ad.status = 'hadir'
               AND YEAR(a.tanggal) = YEAR(CURDATE())
         ";
+        $binds = [];
         if ($this->hasJenisPresensi() && in_array($mode, ['reguler', 'unity'], true)) {
-            $sql .= " AND a.jenis_presensi = ".$this->db->escape($mode)." ";
+            $sql .= " AND a.jenis_presensi = ? ";
+            $binds[] = $mode;
         }
         $sql .= "
             GROUP BY MONTH(a.tanggal)
             ORDER BY bulan ASC
         ";
 
-        return $this->db->query($sql)->getResultArray();
+        return $this->db->query($sql, $binds)->getResultArray();
     }
 
     private function hasJenisPresensi(): bool

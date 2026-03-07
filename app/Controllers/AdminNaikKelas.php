@@ -106,6 +106,10 @@ class AdminNaikKelas extends BaseController
      * ========================= */
     public function execute()
 {
+    if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+        return $this->response->setStatusCode(405);
+    }
+
     if ($this->isLocked()) {
         return redirect()->back()->with(
             'error',
@@ -197,6 +201,11 @@ class AdminNaikKelas extends BaseController
 
     $this->db->transComplete();
 
+    logAudit('execute_naik_kelas', 'warning', [
+        'old' => ['mode' => $mode, 'snapshot_count' => count($snapshot)],
+        'new' => ['tahun_ajaran' => $tahun, 'locked' => true],
+    ]);
+
     return redirect()->back()->with(
         'success',
         'Proses kenaikan kelas BERHASIL & data aman (tanpa cascading bug)'
@@ -208,6 +217,10 @@ class AdminNaikKelas extends BaseController
      * ========================= */
     public function undo()
     {
+        if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+            return $this->response->setStatusCode(405);
+        }
+
         $last = $this->db->table('kelas_history')
             ->orderBy('id', 'DESC')
             ->get(1)->getRowArray();
@@ -233,7 +246,41 @@ class AdminNaikKelas extends BaseController
 
         $this->db->transComplete();
 
+        logAudit('undo_naik_kelas', 'warning', [
+            'old' => ['history_id' => $last['id'] ?? null, 'tahun_ajaran' => $last['tahun_ajaran'] ?? null],
+            'new' => ['undone' => true],
+        ]);
+
         return redirect()->back()->with('success', 'UNDO berhasil & sistem terbuka');
+    }
+    public function lock()
+    {
+        if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+            return $this->response->setStatusCode(405);
+        }
+
+        $tahun = date('Y') . '/' . (date('Y') + 1);
+
+        $last = $this->db->table('kelas_history')
+            ->where('tahun_ajaran', $tahun)
+            ->orderBy('id', 'DESC')
+            ->get(1)
+            ->getRowArray();
+
+        if (!$last) {
+            return redirect()->back()->with('error', 'Belum ada histori kenaikan kelas untuk dikunci.');
+        }
+
+        $this->db->table('kelas_history')
+            ->where('id', $last['id'])
+            ->update(['is_locked' => 1]);
+
+        logAudit('lock_naik_kelas', 'warning', [
+            'old' => ['history_id' => $last['id'] ?? null, 'is_locked' => $last['is_locked'] ?? 0],
+            'new' => ['history_id' => $last['id'] ?? null, 'is_locked' => 1],
+        ]);
+
+        return redirect()->back()->with('success', 'Kenaikan kelas berhasil dikunci.');
     }
     public function exportPdf()
 {
@@ -272,6 +319,42 @@ class AdminNaikKelas extends BaseController
     );
     exit;
 }
+public function exportCsv()
+{
+    $tahun = $this->request->getGet('tahun_ajaran')
+        ?? date('Y').'/'.(date('Y')+1);
+
+    $rows = $this->db->table('kelas_history kh')
+        ->select('
+            kh.id,
+            kh.mode,
+            kh.tahun_ajaran,
+            kh.executed_at,
+            u.nama_depan,
+            u.nama_belakang
+        ')
+        ->join('users u','u.id = kh.executed_by','left')
+        ->where('kh.tahun_ajaran', $tahun)
+        ->orderBy('kh.executed_at','DESC')
+        ->get()
+        ->getResultArray();
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename=histori_naik_kelas_'.$tahun.'.csv');
+
+    echo "ID,Mode,Tahun Ajaran,Waktu,Eksekutor\n";
+    foreach ($rows as $row) {
+        $executor = trim(($row['nama_depan'] ?? '').' '.($row['nama_belakang'] ?? ''));
+        echo implode(',', [
+            $this->escapeCsv((string) ($row['id'] ?? '')),
+            $this->escapeCsv(strtoupper((string) ($row['mode'] ?? ''))),
+            $this->escapeCsv((string) ($row['tahun_ajaran'] ?? '')),
+            $this->escapeCsv((string) ($row['executed_at'] ?? '')),
+            $this->escapeCsv($executor),
+        ])."\n";
+    }
+    exit;
+}
 public function exportSnapshotPdf($id)
 {
     $db = $this->db;
@@ -293,17 +376,7 @@ public function exportSnapshotPdf($id)
         return redirect()->back()->with('error', 'Snapshot kosong');
     }
 
-    // ambil detail murid + kelas
-    $ids = array_column($snapshot, 'id');
-
-    $data = $db->table('murid m')
-        ->select('m.nama_depan, m.nama_belakang, k.kode_kelas')
-        ->join('kelas k', 'k.id = m.kelas_id', 'left')
-        ->whereIn('m.id', $ids)
-        ->orderBy('k.kode_kelas', 'ASC')
-        ->orderBy('m.nama_depan', 'ASC')
-        ->get()
-        ->getResultArray();
+    $data = $this->buildSnapshotDetailRecords($snapshot);
 
     // render view PDF
     $html = view('admin/naik_kelas_histori_snapshot_pdf', [
@@ -323,6 +396,37 @@ public function exportSnapshotPdf($id)
         'snapshot_kelas_'.$row['tahun_ajaran'].'.pdf',
         ['Attachment' => true]
     );
+    exit;
+}
+public function exportSnapshotCsv($id)
+{
+    $row = $this->db->table('kelas_history')
+        ->where('id', $id)
+        ->get()
+        ->getRowArray();
+
+    if (!$row) {
+        return redirect()->back()->with('error', 'Histori tidak ditemukan');
+    }
+
+    $snapshot = json_decode($row['snapshot'], true);
+    if (empty($snapshot)) {
+        return redirect()->back()->with('error', 'Snapshot kosong');
+    }
+
+    $detail = $this->buildSnapshotDetailRecords($snapshot);
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename=snapshot_kelas_'.$row['tahun_ajaran'].'.csv');
+
+    echo "Nama,Kelas Snapshot\n";
+    foreach ($detail as $item) {
+        $nama = trim(($item['nama_depan'] ?? '').' '.($item['nama_belakang'] ?? ''));
+        echo implode(',', [
+            $this->escapeCsv($nama),
+            $this->escapeCsv((string) ($item['kode_kelas'] ?? '-')),
+        ])."\n";
+    }
     exit;
 }
 public function historiDetail($id)
@@ -346,23 +450,75 @@ public function historiDetail($id)
         return redirect()->back()->with('error', 'Snapshot kosong');
     }
 
-    // ambil id murid
-    $ids = array_column($snapshot, 'id');
-
-    // ambil detail murid + kelas
-    $detail = $db->table('murid m')
-        ->select('m.nama_depan, m.nama_belakang, k.kode_kelas')
-        ->join('kelas k', 'k.id = m.kelas_id', 'left')
-        ->whereIn('m.id', $ids)
-        ->orderBy('k.kode_kelas', 'ASC')
-        ->orderBy('m.nama_depan', 'ASC')
-        ->get()
-        ->getResultArray();
+    $detail = $this->buildSnapshotDetailRecords($snapshot);
 
     return view('admin/naik_kelas_histori_detail', [
         'row'    => $row,
         'detail' => $detail
     ]);
+}
+
+private function buildSnapshotDetailRecords(array $snapshot): array
+{
+    $ids = array_values(array_filter(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $snapshot)));
+    $kelasIds = array_values(array_filter(array_map(static fn ($row) => (int) ($row['kelas_id'] ?? 0), $snapshot)));
+
+    if (empty($ids)) {
+        return [];
+    }
+
+    $muridRows = $this->db->table('murid')
+        ->select('id, nama_depan, nama_belakang')
+        ->whereIn('id', $ids)
+        ->get()
+        ->getResultArray();
+
+    $muridMap = [];
+    foreach ($muridRows as $murid) {
+        $muridMap[(int) $murid['id']] = $murid;
+    }
+
+    $kelasMap = [];
+    if (!empty($kelasIds)) {
+        $kelasRows = $this->db->table('kelas')
+            ->select('id, kode_kelas')
+            ->whereIn('id', $kelasIds)
+            ->get()
+            ->getResultArray();
+
+        foreach ($kelasRows as $kelas) {
+            $kelasMap[(int) $kelas['id']] = (string) ($kelas['kode_kelas'] ?? '-');
+        }
+    }
+
+    $detail = [];
+    foreach ($snapshot as $row) {
+        $muridId = (int) ($row['id'] ?? 0);
+        if ($muridId <= 0) {
+            continue;
+        }
+
+        $murid = $muridMap[$muridId] ?? ['nama_depan' => 'Unknown', 'nama_belakang' => ''];
+        $kelasId = (int) ($row['kelas_id'] ?? 0);
+        $detail[] = [
+            'nama_depan' => $murid['nama_depan'] ?? 'Unknown',
+            'nama_belakang' => $murid['nama_belakang'] ?? '',
+            'kode_kelas' => $kelasMap[$kelasId] ?? '-',
+        ];
+    }
+
+    usort($detail, function ($a, $b) {
+        return [$a['kode_kelas'] ?? '', $a['nama_depan'] ?? '', $a['nama_belakang'] ?? '']
+            <=> [$b['kode_kelas'] ?? '', $b['nama_depan'] ?? '', $b['nama_belakang'] ?? ''];
+    });
+
+    return $detail;
+}
+
+private function escapeCsv(string $value): string
+{
+    $escaped = str_replace('"', '""', $value);
+    return '"'.$escaped.'"';
 }
 
 }

@@ -40,8 +40,9 @@ class AdminFotoKegiatan extends BaseController
                 a.tanggal,
                 a.jam,
                 a.selfie_foto,
+                MAX(a.keterangan) AS keterangan,
                 MIN(k.kode_kelas) AS kode_kelas,
-                MIN(li.nama_lokasi) AS nama_lokasi,
+                MIN(COALESCE(NULLIF(a.keterangan, ""), NULLIF(a.lokasi_text, ""), li.nama_lokasi)) AS nama_lokasi,
                 MIN(u.nama_depan) AS nama_depan,
                 MIN(u.nama_belakang) AS nama_belakang
             ')
@@ -63,6 +64,11 @@ class AdminFotoKegiatan extends BaseController
             ->orderBy('a.jam', 'ASC')
             ->get()
             ->getResultArray();
+
+        foreach ($rows as &$row) {
+            $row['nama_lokasi'] = formatLokasiDisplay($row['nama_lokasi'] ?? '-', $row['keterangan'] ?? null);
+        }
+        unset($row);
 
         usort($rows, function ($a, $b) {
             return array_search($a['kode_kelas'], $this->kelasOrder)

@@ -22,6 +22,7 @@ class AdminAbsensiDobel extends Controller
     public function index()
     {
         $tanggal = $this->request->getGet('tanggal');
+        $mode = $this->resolvePresensiMode($this->request->getGet('mode'));
         $builder = $this->db->table('absensi_detail d')
             ->select('
                 d.id as detail_id,
@@ -29,7 +30,9 @@ class AdminAbsensiDobel extends Controller
                 d.status,
                 d.tanggal,
                 d.created_at,
-                li.nama_lokasi,
+                COALESCE(a.jenis_presensi, "reguler") AS jenis_presensi,
+                a.keterangan,
+                COALESCE(NULLIF(a.keterangan, ""), NULLIF(a.lokasi_text, ""), li.nama_lokasi) AS nama_lokasi,
                 u.nama_depan as guru,
                 m.nama_depan as murid_nama,
                 m.panggilan as murid_panggilan,
@@ -48,12 +51,21 @@ class AdminAbsensiDobel extends Controller
         if ($tanggal) {
             $builder->where('d.tanggal', $tanggal);
         }
+        if ($mode === 'reguler') {
+            $builder->groupStart()
+                ->where('a.jenis_presensi', 'reguler')
+                ->orWhere('a.jenis_presensi', null)
+                ->groupEnd();
+        } elseif ($mode === 'unity') {
+            $builder->where('a.jenis_presensi', 'unity');
+        }
 
         $rows = $builder->get()->getResultArray();
 
         $data = [];
         foreach ($rows as $r) {
-            $key = $r['murid_id'].'|'.$r['tanggal'];
+            $key = $r['murid_id'].'|'.$r['tanggal'].'|'.$r['jenis_presensi'];
+            $r['nama_lokasi'] = formatLokasiDisplay($r['nama_lokasi'] ?? '-', $r['keterangan'] ?? null);
 
             $data[$key]['murid_id']        ??= $r['murid_id'];
             $data[$key]['murid_nama']      ??= $r['murid_nama'];
@@ -61,6 +73,7 @@ class AdminAbsensiDobel extends Controller
             $data[$key]['kelas_id']        ??= $r['kelas_id'];
             $data[$key]['kelas_nama']      ??= $r['kelas_nama'];
             $data[$key]['tanggal']         ??= $r['tanggal'];
+            $data[$key]['jenis_presensi']  ??= $r['jenis_presensi'];
 
             if (!isset($data[$key]['murid_display'])) {
                 $namaLengkap = trim($r['murid_nama'] ?? '');
@@ -74,7 +87,8 @@ class AdminAbsensiDobel extends Controller
 
         return view('admin/absensi_dobel', [
             'data'    => $data,
-            'tanggal' => $tanggal
+            'tanggal' => $tanggal,
+            'mode'    => $mode
         ]);
     }
 
@@ -85,7 +99,7 @@ class AdminAbsensiDobel extends Controller
      */
     public function resolve()
 {
-    if (!$this->request->isAJAX()) {
+    if (!$this->request->isAJAX() || strtoupper((string) $this->request->getMethod()) !== 'POST') {
         return $this->response->setStatusCode(403);
     }
 
@@ -102,11 +116,45 @@ class AdminAbsensiDobel extends Controller
     $this->db->transBegin();
 
     // 🔍 ambil data lama (opsional tapi bagus untuk audit)
-    $old = $this->db->table('absensi_detail')
-        ->where('murid_id', $muridId)
-        ->where('tanggal', $tanggal)
+    $selected = $this->db->table('absensi_detail d')
+        ->select('d.id, d.absensi_id, COALESCE(a.jenis_presensi, "reguler") AS jenis_presensi')
+        ->join('absensi a', 'a.id = d.absensi_id')
+        ->where('d.id', $detailId)
+        ->where('d.murid_id', $muridId)
+        ->where('d.tanggal', $tanggal)
         ->get()
+        ->getRowArray();
+
+    if (!$selected) {
+        $this->db->transRollback();
+        return $this->response->setJSON(['status' => 'error']);
+    }
+
+    $jenisPresensi = (string) ($selected['jenis_presensi'] ?? 'reguler');
+
+    $conflictRows = $this->db
+        ->query(
+            "SELECT d.id
+             FROM absensi_detail d
+             JOIN absensi a ON a.id = d.absensi_id
+             WHERE d.murid_id = ?
+               AND d.tanggal = ?
+               AND COALESCE(a.jenis_presensi, 'reguler') = ?",
+            [$muridId, $tanggal, $jenisPresensi]
+        )
         ->getResultArray();
+
+    $conflictIds = array_values(array_filter(array_map(
+        static fn ($row) => (int) ($row['id'] ?? 0),
+        $conflictRows
+    )));
+
+    $old = empty($conflictIds)
+        ? []
+        : $this->db->table('absensi_detail')
+            ->whereIn('id', $conflictIds)
+            ->get()
+            ->getResultArray();
 
     // ✔ JADIKAN SATU HADIR
     $this->db->table('absensi_detail')
@@ -114,11 +162,14 @@ class AdminAbsensiDobel extends Controller
         ->update(['status' => 'hadir']);
 
     // ❌ BATALKAN YANG LAIN
-    $this->db->table('absensi_detail')
-        ->where('murid_id', $muridId)
-        ->where('tanggal', $tanggal)
-        ->where('id', '!=', $detailId)
-        ->update(['status' => 'batal']);
+    if (!empty($conflictIds)) {
+        $cancelIds = array_values(array_filter($conflictIds, static fn ($id) => $id !== (int) $detailId));
+        if (!empty($cancelIds)) {
+            $this->db->table('absensi_detail')
+                ->whereIn('id', $cancelIds)
+                ->update(['status' => 'batal']);
+        }
+    }
 
     if ($this->db->transStatus() === false) {
         $this->db->transRollback();
@@ -160,13 +211,31 @@ class AdminAbsensiDobel extends Controller
         }
 
         $row = $this->db->query("
-            SELECT COUNT(DISTINCT CONCAT(murid_id, '|', tanggal)) AS total
-            FROM absensi_detail
-            WHERE status = 'dobel'
+            SELECT
+                COUNT(DISTINCT CONCAT(d.murid_id, '|', d.tanggal, '|', COALESCE(a.jenis_presensi, 'reguler'))) AS total,
+                COUNT(DISTINCT CASE WHEN COALESCE(a.jenis_presensi, 'reguler') = 'reguler'
+                    THEN CONCAT(d.murid_id, '|', d.tanggal, '|', COALESCE(a.jenis_presensi, 'reguler')) END) AS reguler,
+                COUNT(DISTINCT CASE WHEN COALESCE(a.jenis_presensi, 'reguler') = 'unity'
+                    THEN CONCAT(d.murid_id, '|', d.tanggal, '|', COALESCE(a.jenis_presensi, 'reguler')) END) AS unity
+            FROM absensi_detail d
+            JOIN absensi a ON a.id = d.absensi_id
+            WHERE d.status = 'dobel'
         ")->getRowArray();
 
         return $this->response->setJSON([
-            'total' => (int) ($row['total'] ?? 0)
+            'total' => (int) ($row['total'] ?? 0),
+            'reguler' => (int) ($row['reguler'] ?? 0),
+            'unity' => (int) ($row['unity'] ?? 0),
         ]);
+    }
+
+    private function resolvePresensiMode($mode): string
+    {
+        $value = strtolower(trim((string) $mode));
+        if (!in_array($value, ['all', 'reguler', 'unity'], true)) {
+            return 'all';
+        }
+
+        return $value;
     }
 }

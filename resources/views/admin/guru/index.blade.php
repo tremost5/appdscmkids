@@ -162,6 +162,8 @@
 </div>
 
 <script>
+let guruCsrfToken = '<?= csrf_hash() ?>';
+
 function ensureGuruPopupElements() {
   let back = document.getElementById('guruBackdrop');
   let card = document.getElementById('guruCard');
@@ -325,12 +327,27 @@ function closeGuru(){
 
 /* TOGGLE STATUS – TANPA RELOAD */
 function toggleGuru(id, btn){
+if(!confirm('Ubah status guru ini?')) return;
 fetch(`<?= base_url($prefixGuru . '/toggle') ?>/${id}`,{
- headers:{'X-Requested-With':'XMLHttpRequest'}
+ method:'POST',
+ headers:{
+   'X-Requested-With':'XMLHttpRequest',
+   'Content-Type':'application/x-www-form-urlencoded'
+ },
+ body:new URLSearchParams({_token:guruCsrfToken}).toString()
 })
-.then(r=>r.json())
+.then(async r=>{
+  const res = await r.json().catch(()=>({status:'error',message:'Respons tidak valid'}));
+  if(!r.ok || res.status==='error'){
+    throw new Error(res.message||'Gagal mengubah status guru');
+  }
+  return res;
+})
 .then(res=>{
   const badge=document.getElementById('badge'+id);
+  if(res.csrf && res.csrf.hash){
+    guruCsrfToken = res.csrf.hash;
+  }
 
   if(res.status==='nonaktif'){
     badge.className='badge badge-secondary';
@@ -343,6 +360,11 @@ fetch(`<?= base_url($prefixGuru . '/toggle') ?>/${id}`,{
     btn.className='btn btn-sm btn-danger';
     btn.innerText='Nonaktifkan';
   }
+  if(window.toastr){ toastr.success(res.message||'Status guru diperbarui'); }
+})
+.catch(err=>{
+  if(window.toastr){ toastr.error(err.message||'Gagal mengubah status guru'); }
+  else { alert(err.message||'Gagal mengubah status guru'); }
 });
 }
 

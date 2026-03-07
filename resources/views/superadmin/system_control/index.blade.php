@@ -13,8 +13,10 @@
 <span class="badge badge-success">OFF</span>
 <?php endif ?>
 <br><br>
-<a href="<?= base_url('superadmin/system-control/toggle-maintenance') ?>"
-   class="btn btn-warning">Toggle Maintenance</a>
+<form method="post" action="<?= base_url('superadmin/system-control/toggle-maintenance') ?>">
+<?= csrf_field() ?>
+<button class="btn btn-warning" type="submit">Toggle Maintenance</button>
+</form>
 
 <hr>
 
@@ -25,8 +27,10 @@
 <span class="badge badge-success">OPEN</span>
 <?php endif ?>
 <br><br>
-<a href="<?= base_url('superadmin/system-control/toggle-absensi') ?>"
-   class="btn btn-danger">Toggle Presensi</a>
+<form method="post" action="<?= base_url('superadmin/system-control/toggle-absensi') ?>">
+<?= csrf_field() ?>
+<button class="btn btn-danger" type="submit">Toggle Presensi</button>
+</form>
 
 </div>
 </div>

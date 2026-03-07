@@ -4,19 +4,14 @@ namespace App\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\UserModel;
+use Illuminate\Support\Facades\RateLimiter;
 
 class Auth extends BaseController
 
 {
     public function login()
     {
-        $a = rand(1, 9);
-        $b = rand(1, 9);
-
-        session()->set([
-            'captcha_ans' => $a + $b,
-            'captcha_q'   => "$a + $b = ?"
-        ]);
+        $this->refreshCaptchaChallenge();
 
         return view('auth/login');
     }
@@ -26,10 +21,26 @@ class Auth extends BaseController
         helper('audit');
         app(LoginRequest::class)->validated();
 
+        $username = trim((string) $this->request->getPost('username'));
+        $password = (string) $this->request->getPost('password');
+        $throttleKey = $this->resolveThrottleKey($username);
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            $this->refreshCaptchaChallenge();
+
+            return redirect()->back()->with(
+                'error',
+                'Terlalu banyak percobaan login. Coba lagi dalam ' . $seconds . ' detik.'
+            );
+        }
+
         // ==========================
         // CAPTCHA CHECK
         // ==========================
         if ((int)$this->request->getPost('captcha') !== session()->get('captcha_ans')) {
+            RateLimiter::hit($throttleKey, 60);
+            $this->refreshCaptchaChallenge();
             return redirect()->back()->with('error', 'Captcha salah');
         }
 
@@ -38,19 +49,25 @@ class Auth extends BaseController
         // ==========================
         // AMBIL USER
         // ==========================
-        $user = $model
-            ->where('username', $this->request->getPost('username'))
-            ->where('status', 'aktif')
-            ->first();
+        $user = \Config\Database::connect()
+            ->query(
+                'SELECT * FROM users WHERE LOWER(username) = ? AND status = ? LIMIT 1',
+                [strtolower($username), 'aktif']
+            )
+            ->getRowArray();
 
         if (!$user) {
+            RateLimiter::hit($throttleKey, 60);
+            $this->refreshCaptchaChallenge();
             return redirect()->back()->with('error', 'Username tidak ditemukan atau belum aktif');
         }
 
         // ==========================
         // CEK PASSWORD
         // ==========================
-        if (!password_verify($this->request->getPost('password'), $user['password'])) {
+        if (!password_verify($password, $user['password'])) {
+            RateLimiter::hit($throttleKey, 60);
+            $this->refreshCaptchaChallenge();
             return redirect()->back()->with('error', 'Password salah');
         }
 
@@ -59,6 +76,7 @@ class Auth extends BaseController
         // ==========================
         session()->regenerate(true);
         $sessionToken = bin2hex(random_bytes(32));
+        RateLimiter::clear($throttleKey);
 
         // ==========================
         // UPDATE LOGIN INFO
@@ -83,6 +101,8 @@ session()->set([
     'session_token' => $sessionToken,
 
 ]);
+        session()->forget('captcha_ans');
+        session()->forget('captcha_q');
 
 
         // ==========================
@@ -130,5 +150,22 @@ session()->set([
 
         session()->destroy();
         return redirect()->to('/login');
+    }
+
+    private function refreshCaptchaChallenge(): void
+    {
+        $a = random_int(1, 9);
+        $b = random_int(1, 9);
+
+        session()->set([
+            'captcha_ans' => $a + $b,
+            'captcha_q'   => "$a + $b = ?",
+        ]);
+    }
+
+    private function resolveThrottleKey(string $username): string
+    {
+        $ipAddress = (string) request()->ip();
+        return 'login:' . strtolower($username) . '|' . $ipAddress;
     }
 }

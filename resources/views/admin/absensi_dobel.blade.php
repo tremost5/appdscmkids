@@ -1,14 +1,21 @@
 @extends('layouts/adminlte')
 @section('content')
 
-<h3 class="mb-3 text-danger">Presensi Dobel</h3>
+<?php
+$modeAktif = $mode ?? 'all';
+$title = $modeAktif === 'all' ? 'Presensi Dobel' : 'Presensi Dobel '.ucfirst($modeAktif);
+$picLabel = $modeAktif === 'unity' ? 'Mentor' : 'Guru';
+?>
+
+<h3 class="mb-3 text-danger"><?= esc($title) ?></h3>
 
 <form method="get" class="mb-3">
+  <input type="hidden" name="mode" value="<?= esc($modeAktif) ?>">
   <label>Tanggal (Opsional):</label>
   <input type="date" name="tanggal" value="<?= esc($tanggal) ?>">
   <button class="btn btn-primary btn-sm">Filter</button>
   <?php if ($tanggal): ?>
-    <a href="<?= base_url('admin/absensi-dobel') ?>"
+    <a href="<?= base_url('admin/absensi-dobel') ?>?mode=<?= esc($modeAktif) ?>"
        class="btn btn-secondary btn-sm">Reset</a>
   <?php endif; ?>
 </form>
@@ -25,7 +32,8 @@
   <div class="card-header bg-warning">
     <b><?= esc($row['murid_display']) ?></b> |
     Kelas <?= esc($row['kelas_nama'] ?? $row['kelas_id']) ?> |
-    <?= esc($row['tanggal']) ?>
+    <?= esc($row['tanggal']) ?> |
+    <?= esc(ucfirst($row['jenis_presensi'] ?? 'reguler')) ?>
   </div>
 
   <div class="card-body p-0">
@@ -45,6 +53,7 @@
         </td>
 
         <td>
+          <span class="text-muted mr-1"><?= esc($picLabel) ?>:</span>
           <?= esc($it['guru']) ?>
         </td>
 

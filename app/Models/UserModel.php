@@ -23,6 +23,10 @@ class UserModel extends Model
     'status',
     'session_token',
     'last_login',
+    'last_seen',
+    'last_activity',
+    'updated_at',
+    'is_locked',
 
     // 🔥 TAMBAHKAN INI
     'reset_token',

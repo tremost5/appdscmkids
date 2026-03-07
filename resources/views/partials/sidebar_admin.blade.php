@@ -10,6 +10,8 @@ $canAdminMateri    = (int) setting('admin_materi', 1) === 1;
 $canAdminNaikKelas = (int) setting('admin_naik_kelas', 1) === 1;
 
 $dobelUnresolvedCount = 0;
+$dobelRegulerCount = 0;
+$dobelUnityCount = 0;
 $guruNonaktifCount = 0;
 $guruBaruDaftarCount = 0;
 $guruAlertCount = 0;
@@ -18,13 +20,23 @@ if ($canAdminAbsen) {
   try {
     $db = \Config\Database::connect();
     $dobelCountRow = $db->query("
-      SELECT COUNT(DISTINCT CONCAT(murid_id, '|', tanggal)) AS total
-      FROM absensi_detail
-      WHERE status = 'dobel'
+      SELECT
+        COUNT(DISTINCT CONCAT(d.murid_id, '|', d.tanggal, '|', COALESCE(a.jenis_presensi, 'reguler'))) AS total,
+        COUNT(DISTINCT CASE WHEN COALESCE(a.jenis_presensi, 'reguler') = 'reguler'
+          THEN CONCAT(d.murid_id, '|', d.tanggal, '|', COALESCE(a.jenis_presensi, 'reguler')) END) AS reguler,
+        COUNT(DISTINCT CASE WHEN COALESCE(a.jenis_presensi, 'reguler') = 'unity'
+          THEN CONCAT(d.murid_id, '|', d.tanggal, '|', COALESCE(a.jenis_presensi, 'reguler')) END) AS unity
+      FROM absensi_detail d
+      JOIN absensi a ON a.id = d.absensi_id
+      WHERE d.status = 'dobel'
     ")->getRowArray();
     $dobelUnresolvedCount = (int) ($dobelCountRow['total'] ?? 0);
+    $dobelRegulerCount = (int) ($dobelCountRow['reguler'] ?? 0);
+    $dobelUnityCount = (int) ($dobelCountRow['unity'] ?? 0);
   } catch (\Throwable $e) {
     $dobelUnresolvedCount = 0;
+    $dobelRegulerCount = 0;
+    $dobelUnityCount = 0;
   }
 }
 
@@ -140,6 +152,10 @@ if ($canAdminGuru) {
 
     <!-- ================= ABSENSI ================= -->
     <?php
+      $adminMode = strtolower(trim((string) ($_GET['mode'] ?? '')));
+      if (!in_array($adminMode, ['reguler', 'unity'], true)) {
+        $adminMode = 'all';
+      }
       $isAbsensi =
         str_contains(uri_string(), 'admin/rekap-absensi') ||
         str_contains(uri_string(), 'admin/absensi-dobel') ||
@@ -161,35 +177,61 @@ if ($canAdminGuru) {
 
         <ul class="nav nav-treeview pl-2">
 
-            <!-- ABSENSI DOBEL -->
             <li class="nav-item">
-                <a href="<?= base_url('admin/absensi-dobel') ?>"
-                   class="nav-link <?= $dobelUnresolvedCount > 0 ? 'absensi-warning absensi-shake animate__animated animate__pulse' : '' ?>"
-                   id="menuDobel">
+                <a href="<?= base_url('admin/absensi-dobel?mode=reguler') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'admin/absensi-dobel') && $adminMode === 'reguler' ? 'active' : '' ?> <?= $dobelRegulerCount > 0 ? 'absensi-warning absensi-shake animate__animated animate__pulse' : '' ?>"
+                   id="menuDobelReguler">
                     <i class="nav-icon fas fa-exclamation-triangle"></i>
                     <p>
-                        Presensi Dobel
-                        <span class="badge badge-danger ml-2 <?= $dobelUnresolvedCount > 0 ? '' : 'd-none' ?>"
-                              id="badgeDobel"><?= $dobelUnresolvedCount ?></span>
+                        Presensi Dobel Reguler
+                        <span class="badge badge-danger ml-2 <?= $dobelRegulerCount > 0 ? '' : 'd-none' ?>"
+                              id="badgeDobelReguler"><?= $dobelRegulerCount ?></span>
                     </p>
                 </a>
             </li>
 
-            <!-- REKAP -->
             <li class="nav-item">
-                <a href="<?= base_url('admin/rekap-absensi') ?>"
-                   class="nav-link <?= str_contains(uri_string(), 'rekap-absensi') ? 'active' : '' ?>">
-                    <i class="far fa-circle nav-icon"></i>
-                    <p>Rekap Presensi</p>
+                <a href="<?= base_url('admin/absensi-dobel?mode=unity') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'admin/absensi-dobel') && $adminMode === 'unity' ? 'active' : '' ?> <?= $dobelUnityCount > 0 ? 'absensi-warning absensi-shake animate__animated animate__pulse' : '' ?>"
+                   id="menuDobelUnity">
+                    <i class="nav-icon fas fa-exclamation-triangle"></i>
+                    <p>
+                        Presensi Dobel Unity
+                        <span class="badge badge-danger ml-2 <?= $dobelUnityCount > 0 ? '' : 'd-none' ?>"
+                              id="badgeDobelUnity"><?= $dobelUnityCount ?></span>
+                    </p>
                 </a>
             </li>
 
-            <!-- STATISTIK -->
             <li class="nav-item">
-                <a href="<?= base_url('admin/statistik') ?>"
-                   class="nav-link <?= str_contains(uri_string(), 'admin/statistik') ? 'active' : '' ?>">
+                <a href="<?= base_url('admin/rekap-absensi?mode=reguler') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'rekap-absensi') && $adminMode === 'reguler' ? 'active' : '' ?>">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Rekap Presensi Reguler</p>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/rekap-absensi?mode=unity') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'rekap-absensi') && $adminMode === 'unity' ? 'active' : '' ?>">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Rekap Presensi Unity</p>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/statistik?mode=reguler') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'admin/statistik') && $adminMode === 'reguler' ? 'active' : '' ?>">
                     <i class="fas fa-chart-bar nav-icon"></i>
-                    <p>Statistik</p>
+                    <p>Statistik Reguler</p>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/statistik?mode=unity') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'admin/statistik') && $adminMode === 'unity' ? 'active' : '' ?>">
+                    <i class="fas fa-chart-bar nav-icon"></i>
+                    <p>Statistik Unity</p>
                 </a>
             </li>
 
@@ -235,26 +277,50 @@ if ($canAdminGuru) {
 
         <ul class="nav nav-treeview pl-2">
             <li class="nav-item">
-                <a href="<?= base_url('admin/export-excel/mingguan') ?>"
-                   class="nav-link <?= str_contains(uri_string(), 'mingguan') ? 'active' : '' ?>">
+                <a href="<?= base_url('admin/export-excel/mingguan?mode=reguler') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'mingguan') && $adminMode === 'reguler' ? 'active' : '' ?>">
                     <i class="far fa-circle nav-icon"></i>
-                    <p>Excel Mingguan</p>
+                    <p>Excel Mingguan Reguler</p>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="<?= base_url('admin/export-excel/bulanan') ?>"
-                   class="nav-link <?= str_contains(uri_string(), 'bulanan') ? 'active' : '' ?>">
+                <a href="<?= base_url('admin/export-excel/mingguan?mode=unity') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'mingguan') && $adminMode === 'unity' ? 'active' : '' ?>">
                     <i class="far fa-circle nav-icon"></i>
-                    <p>Excel Bulanan</p>
+                    <p>Excel Mingguan Unity</p>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="<?= base_url('admin/export-excel/tahunan') ?>"
-                   class="nav-link <?= str_contains(uri_string(), 'tahunan') ? 'active' : '' ?>">
+                <a href="<?= base_url('admin/export-excel/bulanan?mode=reguler') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'bulanan') && $adminMode === 'reguler' ? 'active' : '' ?>">
                     <i class="far fa-circle nav-icon"></i>
-                    <p>Excel Tahunan</p>
+                    <p>Excel Bulanan Reguler</p>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/export-excel/bulanan?mode=unity') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'bulanan') && $adminMode === 'unity' ? 'active' : '' ?>">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Excel Bulanan Unity</p>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/export-excel/tahunan?mode=reguler') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'tahunan') && $adminMode === 'reguler' ? 'active' : '' ?>">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Excel Tahunan Reguler</p>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/export-excel/tahunan?mode=unity') ?>"
+                   class="nav-link <?= str_contains(uri_string(), 'tahunan') && $adminMode === 'unity' ? 'active' : '' ?>">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Excel Tahunan Unity</p>
                 </a>
             </li>
         </ul>
@@ -335,31 +401,43 @@ if ($canAdminGuru) {
       return r.json();
     })
     .then(res => {
-      const badge  = document.getElementById('badgeDobel');
+      const badgeReguler = document.getElementById('badgeDobelReguler');
+      const badgeUnity = document.getElementById('badgeDobelUnity');
       const global = document.getElementById('badgeAbsensiGlobal');
-      const menu   = document.getElementById('menuDobel');
+      const menuReguler = document.getElementById('menuDobelReguler');
+      const menuUnity = document.getElementById('menuDobelUnity');
+      const total = Number(res.total) || 0;
+      const reguler = Number(res.reguler) || 0;
+      const unity = Number(res.unity) || 0;
 
-      if (!badge || !menu || !global) return;
+      if (!global) return;
 
-      if (res.total > 0) {
-        // badge merah
-        badge.innerText = res.total;
-        badge.classList.remove('d-none');
+      if (badgeReguler) {
+        badgeReguler.innerText = reguler;
+        badgeReguler.classList.toggle('d-none', reguler <= 0);
+      }
+      if (badgeUnity) {
+        badgeUnity.innerText = unity;
+        badgeUnity.classList.toggle('d-none', unity <= 0);
+      }
 
-        // badge global !
+      if (total > 0) {
         global.classList.remove('d-none');
 
-        // MENU NYALA + GERAK
         const menuAbs = document.getElementById('menuAbsensi');
         if (menuAbs) {
           menuAbs.classList.add('absensi-warning');
           menuAbs.classList.add('absensi-shake');
         }
-        menu.classList.add('absensi-warning');
-        menu.classList.add('animate__animated','animate__pulse');
-        menu.classList.add('absensi-shake');
+        [menuReguler, menuUnity].forEach((menu, index) => {
+          if (!menu) return;
+          const activeCount = index === 0 ? reguler : unity;
+          menu.classList.toggle('absensi-warning', activeCount > 0);
+          menu.classList.toggle('animate__animated', activeCount > 0);
+          menu.classList.toggle('animate__pulse', activeCount > 0);
+          menu.classList.toggle('absensi-shake', activeCount > 0);
+        });
       } else {
-        badge.classList.add('d-none');
         global.classList.add('d-none');
 
         const menuAbs = document.getElementById('menuAbsensi');
@@ -367,9 +445,12 @@ if ($canAdminGuru) {
           menuAbs.classList.remove('absensi-warning');
           menuAbs.classList.remove('absensi-shake');
         }
-        menu.classList.remove('absensi-warning');
-        menu.classList.remove('animate__animated','animate__pulse');
-        menu.classList.remove('absensi-shake');
+        [menuReguler, menuUnity].forEach((menu) => {
+          if (!menu) return;
+          menu.classList.remove('absensi-warning');
+          menu.classList.remove('animate__animated', 'animate__pulse');
+          menu.classList.remove('absensi-shake');
+        });
       }
     })
     .catch(() => {

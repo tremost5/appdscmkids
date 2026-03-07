@@ -1,9 +1,16 @@
 @extends('layouts/adminlte')
 @section('content')
 
+<?php
+$modeAktif = $mode ?? 'all';
+$isUnityMode = $modeAktif === 'unity';
+$guruLabel = $modeAktif === 'all' ? 'PIC' : ($isUnityMode ? 'Mentor' : 'Guru');
+$titleLabel = $modeAktif === 'all' ? 'Rekap Presensi' : 'Rekap Presensi '.ucfirst($modeAktif);
+?>
+
 <section class="content-header">
   <div class="container-fluid">
-    <h4>Detail Presensi <?= esc($tanggal) ?></h4>
+    <h4><?= esc($titleLabel) ?> <?= esc($tanggal) ?></h4>
   </div>
 </section>
 
@@ -54,10 +61,14 @@
     </strong>
 
     <div class="small text-muted mt-1">
-      <?= unityBadge($r['unity'] ?? '') ?> <?= esc($r['unity'] ?? '-') ?><br>
+      📅 <?= esc($tanggal) ?> |
+      Kelas <?= esc($r['kelas_id']) ?><br>
       🕒 <?= esc($r['jam']) ?> |
       📍 <?= esc($r['nama_lokasi'] ?? '-') ?><br>
-      👨‍🏫 <?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?>
+      <?= $isUnityMode ? '🧑‍🤝‍🧑' : '👨‍🏫' ?> <?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?>
+      <?php if ($modeAktif === 'all'): ?>
+        <br><span class="badge badge-info"><?= esc(ucfirst($r['jenis_presensi'] ?? 'reguler')) ?></span>
+      <?php endif; ?>
     </div>
   </div>
 </div>
@@ -68,21 +79,27 @@
 <table class="table table-bordered table-sm">
 <thead class="thead-light">
 <tr>
+  <th>Tanggal</th>
   <th>Nama</th>
   <th>Kelas</th>
-  <th>Unity</th>
+  <?php if ($modeAktif === 'all'): ?>
+    <th>Jenis</th>
+  <?php endif; ?>
   <th>Jam</th>
   <th>Lokasi</th>
-  <th>Guru</th>
+  <th><?= esc($guruLabel) ?></th>
   <th>Status</th>
 </tr>
 </thead>
 <tbody>
 <?php foreach ($rows as $r): ?>
 <tr class="<?= ($r['dobel'] > 1 ? 'table-danger' : '') ?>">
+  <td><?= esc($tanggal) ?></td>
   <td><?= esc($r['nama_depan'].' '.$r['nama_belakang']) ?></td>
   <td><?= esc($r['kelas_id']) ?></td>
-  <td><?= unityBadge($r['unity'] ?? '') ?> <?= esc($r['unity'] ?? '-') ?></td>
+  <?php if ($modeAktif === 'all'): ?>
+    <td><?= esc(ucfirst($r['jenis_presensi'] ?? 'reguler')) ?></td>
+  <?php endif; ?>
   <td><?= esc($r['jam']) ?></td>
   <td><?= esc($r['nama_lokasi'] ?? '-') ?></td>
   <td><?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?></td>

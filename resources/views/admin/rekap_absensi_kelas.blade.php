@@ -9,11 +9,13 @@ $mapKelas = [
 ];
 
 $kelasAktif = $kelas ?? '';
+$modeAktif = $mode ?? 'all';
+$titleLabel = $modeAktif === 'all' ? 'Rekap Presensi Per Kelas' : 'Rekap '.ucfirst($modeAktif).' Per Kelas';
 ?>
 
 <section class="content-header">
   <div class="container-fluid">
-    <h1>Rekap Presensi Per Kelas</h1>
+    <h1><?= esc($titleLabel) ?></h1>
     <p class="text-muted">
       Periode
       <?= esc($start ?? '-') ?> s/d <?= esc($end ?? '-') ?>

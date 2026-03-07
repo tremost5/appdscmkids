@@ -26,6 +26,7 @@
           <td>
             <form method="post"
                   action="<?= base_url('superadmin/users/update') ?>">
+              <?= csrf_field() ?>
               <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
               <select name="role_id" class="form-control">
                 <option value="1" <?= (int)$u['role_id'] === 1 ? 'selected' : '' ?>>Superadmin</option>

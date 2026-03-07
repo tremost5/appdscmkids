@@ -8,7 +8,7 @@
 .guru-header-soft{background:linear-gradient(90deg,#f3e8ff,#fce7f3)!important}
 </style>
 
-<h3 class="mb-3">Presensi Hari Ini</h3>
+<h3 class="mb-3"><?= esc(($modeLabel ?? 'Presensi').' Hari Ini') ?></h3>
 
 <?php if (session()->getFlashdata('success')): ?>
   <div class="alert alert-success">
@@ -25,7 +25,7 @@
 <?php if (!$absensi): ?>
   <div class="alert alert-info">Belum ada presensi hari ini.</div>
   <a href="<?= base_url('dashboard/guru') ?>" class="btn btn-secondary">Dashboard</a>
-  <a href="<?= base_url('guru/absensi') ?>" class="btn btn-primary">Presensi</a>
+  <a href="<?= esc($backUrl ?? base_url('guru/absensi')) ?>" class="btn btn-primary"><?= esc($modeLabel ?? 'Presensi') ?></a>
 <?php else: ?>
 <?php
 $hadir = 0;
@@ -53,10 +53,10 @@ $sisa = max(0, 10800 - (time() - ($refTime ?: time())));
     <div>
       <strong><?= date('d M Y', strtotime($absensi['tanggal'])) ?></strong><br>
       <small class="text-muted">
-        <?= substr($absensi['jam'] ?? '00:00:00', 0, 5) ?> - <?= esc($absensi['lokasi_text'] ?? '-') ?>
+        <?= substr($absensi['jam'] ?? '00:00:00', 0, 5) ?> - <?= esc(formatLokasiDisplay($absensi['lokasi_text'] ?? '-', $absensi['keterangan'] ?? null)) ?>
       </small>
     </div>
-    <span class="badge bg-primary">CPM</span>
+    <span class="badge bg-primary"><?= esc($modeLabel ?? 'Presensi') ?></span>
   </div>
 </div>
 
@@ -90,7 +90,7 @@ $sisa = max(0, 10800 - (time() - ($refTime ?: time())));
 </div>
 <?php endif; ?>
 
-<form method="post" action="<?= base_url('guru/absensi-hari-ini/simpan') ?>">
+<form method="post" action="<?= esc($saveUrl ?? base_url('guru/absensi-hari-ini/simpan')) ?>">
 <?= csrf_field() ?>
 <input type="hidden" name="absensi_id" value="<?= (int) $absensi['id'] ?>">
 
@@ -155,7 +155,7 @@ foreach($detail as $d):
 </form>
 
 <a href="<?= base_url('dashboard/guru') ?>" class="btn btn-secondary">Dashboard</a>
-<a href="<?= base_url('guru/absensi') ?>" class="btn btn-primary">Presensi</a>
+<a href="<?= esc($backUrl ?? base_url('guru/absensi')) ?>" class="btn btn-primary"><?= esc($modeLabel ?? 'Presensi') ?></a>
 
 <div id="fotoOverlay"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1050"

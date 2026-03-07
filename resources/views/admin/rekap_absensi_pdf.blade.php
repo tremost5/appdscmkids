@@ -66,6 +66,10 @@ table.data th {
 </head>
 
 <body>
+<?php
+$modeAktif = $mode ?? 'all';
+$guruLabel = $modeAktif === 'all' ? 'PIC' : ($modeAktif === 'unity' ? 'Mentor' : 'Guru');
+?>
 
 <div class="watermark">DSCM KIDS</div>
 
@@ -88,27 +92,33 @@ table.data th {
 <thead>
 <tr>
     <th>No</th>
+    <th>Tanggal</th>
     <th>Nama</th>
     <th>Kelas</th>
-    <th>Unity</th>
+    <?php if ($modeAktif === 'all'): ?>
+    <th>Jenis</th>
+    <?php endif; ?>
     <th>Status</th>
     <th>Lokasi</th>
     <th>Jam</th>
-    <th>Guru</th>
+    <th><?= esc($guruLabel) ?></th>
 </tr>
 </thead>
 <tbody>
 
 <?php if (empty($data)): ?>
-<tr><td colspan="8" align="center">Tidak ada data</td></tr>
+<tr><td colspan="<?= $modeAktif === 'all' ? '9' : '8' ?>" align="center">Tidak ada data</td></tr>
 <?php endif; ?>
 
 <?php $no=1; foreach ($data as $d): ?>
 <tr>
     <td align="center"><?= $no++ ?></td>
+    <td align="center"><?= esc($tanggal ?? '-') ?></td>
     <td><?= esc(trim($d['nama_depan'].' '.$d['nama_belakang'])) ?></td>
     <td align="center"><?= esc($d['nama_kelas'] ?? '-') ?></td>
-    <td align="center"><?= esc($d['unity'] ?? '-') ?></td>
+    <?php if ($modeAktif === 'all'): ?>
+    <td align="center"><?= esc(ucfirst($d['jenis_presensi'] ?? 'reguler')) ?></td>
+    <?php endif; ?>
     <td align="center">HADIR</td>
     <td align="center"><?= esc($d['nama_lokasi'] ?? '-') ?></td>
     <td align="center"><?= esc($d['jam'] ?? '-') ?></td>

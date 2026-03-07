@@ -231,10 +231,16 @@ fetch(`<?= base_url('admin/bahan-ajar/update-ajax') ?>/${e_id.value}`,{
 method:'POST',
 headers:{'X-Requested-With':'XMLHttpRequest'},
 body:new FormData(formEdit)
-}).then(()=>{
+}).then(async r=>{
+const res = await r.json().catch(()=>({status:'error',message:'Respons tidak valid'}));
+if(!r.ok || res.status!=='ok'){
+  throw new Error(res.message||'Gagal memperbarui materi');
+}
 toastr.success('Materi diperbarui');
 $('#modalEdit').modal('hide');
 load();
+}).catch(err=>{
+toastr.error(err.message||'Gagal memperbarui materi');
 });
 };
 
@@ -244,9 +250,15 @@ if(!confirm('Hapus materi ini?'))return;
 fetch(`<?= base_url('admin/bahan-ajar/delete-ajax') ?>/${id}`,{
 method:'POST',
 headers:{'X-Requested-With':'XMLHttpRequest'}
-}).then(()=>{
+}).then(async r=>{
+const res = await r.json().catch(()=>({status:'error',message:'Respons tidak valid'}));
+if(!r.ok || res.status!=='ok'){
+  throw new Error(res.message||'Gagal menghapus materi');
+}
 toastr.success('Dihapus');
 document.getElementById('r'+id).remove();
+}).catch(err=>{
+toastr.error(err.message||'Gagal menghapus materi');
 });
 }
 
@@ -271,12 +283,24 @@ progressBar.style.width=percent+'%';
 xhr.onload=()=>{
 progressWrap.classList.add('d-none');
 progressBar.style.width='0%';
+let res={status:'ok'};
+try{res=JSON.parse(xhr.responseText||'{}')}catch(e){}
+if(xhr.status<200||xhr.status>=300||res.status!=='ok'){
+  toastr.error(res.message||'Upload gagal');
+  return;
+}
 toastr.success('Upload berhasil');
 formUpload.reset();
 fileName.innerText='Belum ada file dipilih';
 linkInput.classList.add('d-none');
 dz.classList.remove('d-none');
 load();
+};
+
+xhr.onerror=()=>{
+progressWrap.classList.add('d-none');
+progressBar.style.width='0%';
+toastr.error('Upload gagal');
 };
 
 xhr.send(new FormData(formUpload));

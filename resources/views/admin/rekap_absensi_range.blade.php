@@ -7,11 +7,13 @@ $mapKelas = [
   4=>'1',5=>'2',6=>'3',
   7=>'4',8=>'5',9=>'6',11=>'TR'
 ];
+$modeAktif = $mode ?? 'all';
+$titleLabel = $modeAktif === 'all' ? 'Rekap Presensi' : 'Rekap Presensi '.ucfirst($modeAktif);
 ?>
 
 <section class="content-header">
   <div class="container-fluid">
-    <h1>Rekap Presensi</h1>
+    <h1><?= esc($titleLabel) ?></h1>
     <p class="text-muted">Ringkasan presensi per tanggal & kelas</p>
   </div>
 </section>

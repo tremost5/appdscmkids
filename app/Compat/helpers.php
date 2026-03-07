@@ -33,7 +33,7 @@ if (!function_exists('esc')) {
 if (!function_exists('csrf_hash')) {
     function csrf_hash(): string
     {
-        return csrf_token();
+        return (string) (csrf_token() ?? '');
     }
 }
 

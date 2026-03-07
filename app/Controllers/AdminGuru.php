@@ -112,24 +112,44 @@ class AdminGuru extends BaseController
     // ===============================
     public function toggle($id)
 {
-    if (!$this->request->isAJAX()) {
+    if (!$this->request->isAJAX() || strtoupper((string) $this->request->getMethod()) !== 'POST') {
         return $this->response->setStatusCode(403);
     }
 
     helper(['wa', 'wa_template']);
 
+    $id = (int) $id;
     $user = $this->userModel->find($id);
     if (!$user || $user['role_id'] != 3) {
-        return $this->response->setJSON(['status' => 'error']);
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Guru tidak ditemukan',
+        ])->setStatusCode(404);
     }
 
     $statusLama = $user['status'];
     $statusBaru = ($statusLama === 'aktif') ? 'nonaktif' : 'aktif';
 
+    $this->db->transStart();
     $this->userModel->update($id, [
         'status' => $statusBaru,
         'session_token' => $statusBaru === 'nonaktif' ? null : $user['session_token'],
         'last_activity' => $statusBaru === 'nonaktif' ? null : $user['last_activity'],
+    ]);
+    $this->db->transComplete();
+
+    if ($this->db->transStatus() === false) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Gagal mengubah status guru',
+        ])->setStatusCode(500);
+    }
+
+    logAudit('toggle_status_guru', 'warning', [
+        'target' => 'users',
+        'target_id' => $id,
+        'old' => ['status' => $statusLama],
+        'new' => ['status' => $statusBaru],
     ]);
 
     $namaDepan = (string) ($user['nama_depan'] ?? '');
@@ -151,7 +171,14 @@ class AdminGuru extends BaseController
     $rendered = waTemplateRender(waTemplateGet($templateKey), $vars);
 
     if ($targetNo !== '') {
-        kirimWA($targetNo, $rendered);
+        try {
+            kirimWA($targetNo, $rendered);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal kirim WA status guru ke user {id}: {msg}', [
+                'id' => $id,
+                'msg' => $e->getMessage(),
+            ]);
+        }
     }
 
     $adminNotice = "[NOTIF STATUS GURU]\n" . $rendered;
@@ -159,11 +186,22 @@ class AdminGuru extends BaseController
         if ($recipientNo === $targetNo) {
             continue;
         }
-        kirimWA($recipientNo, $adminNotice);
+        try {
+            kirimWA($recipientNo, $adminNotice);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal kirim WA status guru ke admin recipient: {msg}', [
+                'msg' => $e->getMessage(),
+            ]);
+        }
     }
 
     return $this->response->setJSON([
-        'status' => $statusBaru
+        'status' => $statusBaru,
+        'message' => 'Status guru diperbarui',
+        'csrf'   => [
+            'name' => csrf_token(),
+            'hash' => csrf_hash(),
+        ],
     ]);
 }
 
@@ -172,9 +210,24 @@ class AdminGuru extends BaseController
     // ===============================
     public function toggleRole($id)
     {
+        if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+            return $this->response->setStatusCode(405);
+        }
+
+        $id = (int) $id;
+        $actorId = (int) session()->get('user_id');
         $user = $this->userModel->find($id);
         if (!$user) {
             return redirect()->back()->with('error', 'User tidak ditemukan');
+        }
+        if ((int) ($user['role_id'] ?? 0) === 1) {
+            return redirect()->back()->with('error', 'Role superadmin tidak boleh diubah dari menu ini.');
+        }
+        if ($actorId > 0 && $actorId === $id) {
+            return redirect()->back()->with('error', 'Tidak boleh mengubah role akun sendiri.');
+        }
+        if (!in_array((int) ($user['role_id'] ?? 0), [2, 3], true)) {
+            return redirect()->back()->with('error', 'Role user ini tidak didukung untuk toggle.');
         }
 
         $roleBaru = ($user['role_id'] == 3) ? 2 : 3;
@@ -241,6 +294,16 @@ class AdminGuru extends BaseController
 }
 
         $this->db->transComplete();
+        if ($this->db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Gagal mengubah role user.');
+        }
+
+        logAudit('toggle_role_user', 'warning', [
+            'target' => 'users',
+            'target_id' => $id,
+            'old' => ['role_id' => (int) ($user['role_id'] ?? 0)],
+            'new' => ['role_id' => $roleBaru],
+        ]);
 
         return redirect()->back()->with(
             'success',
@@ -255,12 +318,63 @@ class AdminGuru extends BaseController
     // ===============================
     public function delete($id)
     {
+        if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+            return $this->response->setStatusCode(405);
+        }
+
+        $id = (int) $id;
+        $actorId = (int) session()->get('user_id');
         $guru = $this->userModel->find($id);
         if (!$guru) {
             return redirect()->back()->with('error', 'Data guru tidak ditemukan');
         }
+        if ((int) ($guru['role_id'] ?? 0) !== 3) {
+            return redirect()->back()->with('error', 'Hanya akun guru yang bisa dihapus dari menu ini.');
+        }
+        if ($actorId > 0 && $actorId === $id) {
+            return redirect()->back()->with('error', 'Tidak boleh menghapus akun sendiri.');
+        }
 
+        $hasAbsensi = $this->db->table('absensi')->where('guru_id', $id)->countAllResults() > 0;
+        $hasAudit = $this->db->table('audit_log')->where('user_id', $id)->countAllResults() > 0;
+        $hasKegiatan = $this->db->table('guru_kegiatan')->where('guru_id', $id)->countAllResults() > 0;
+
+        if ($hasAbsensi || $hasAudit || $hasKegiatan) {
+            return redirect()->back()->with(
+                'error',
+                'Guru sudah memiliki histori data. Gunakan nonaktifkan, jangan hapus permanen.'
+            );
+        }
+
+        $this->db->transStart();
+        $this->db->table('wa_recipients')->where('user_id', $id)->delete();
         $this->userModel->delete($id);
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Gagal menghapus guru.');
+        }
+
+        $foto = trim((string) ($guru['foto'] ?? ''));
+        if ($foto !== '' && $foto !== 'default.png') {
+            $fotoPath = FCPATH . 'uploads/guru/' . basename($foto);
+            if (is_file($fotoPath)) {
+                @unlink($fotoPath);
+            }
+        }
+
+        logAudit('delete_guru', 'warning', [
+            'target' => 'users',
+            'target_id' => $id,
+            'old' => [
+                'nama_depan' => $guru['nama_depan'] ?? null,
+                'nama_belakang' => $guru['nama_belakang'] ?? null,
+                'username' => $guru['username'] ?? null,
+                'email' => $guru['email'] ?? null,
+                'status' => $guru['status'] ?? null,
+            ],
+            'new' => ['deleted' => true],
+        ]);
 
         return redirect()->back()->with('success', 'Guru berhasil dihapus');
     }

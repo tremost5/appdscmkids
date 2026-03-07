@@ -54,11 +54,15 @@ class AdminAbsensi extends BaseController
                 COUNT(DISTINCT a.guru_id) AS total_guru,
                 SUM(
                     CASE 
-                        WHEN ad.murid_id IN (
-                            SELECT murid_id
-                            FROM absensi_detail
-                            WHERE status != 'batal'
-                            GROUP BY murid_id, tanggal
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM absensi_detail d2
+                            JOIN absensi a2 ON a2.id = d2.absensi_id
+                            WHERE d2.status != 'batal'
+                              AND d2.murid_id = ad.murid_id
+                              AND d2.tanggal = a.tanggal
+                              AND COALESCE(a2.jenis_presensi, 'reguler') = COALESCE(a.jenis_presensi, 'reguler')
+                            GROUP BY d2.murid_id, d2.tanggal, COALESCE(a2.jenis_presensi, 'reguler')
                             HAVING COUNT(*) > 1
                         )
                         THEN 1 ELSE 0
@@ -126,11 +130,13 @@ class AdminAbsensi extends BaseController
                 m.kelas_id,
                 '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 a.jam,
+                COALESCE(a.jenis_presensi, "reguler") AS jenis_presensi,
+                a.keterangan,
                 a.lokasi_id,
-                li.nama_lokasi,
+                COALESCE(NULLIF(a.keterangan, ""), NULLIF(a.lokasi_text, ""), li.nama_lokasi) AS nama_lokasi,
                 u.nama_depan AS guru_depan,
                 u.nama_belakang AS guru_belakang,
-                COUNT(ad.murid_id) OVER (PARTITION BY ad.murid_id) AS dobel
+                COUNT(ad.murid_id) OVER (PARTITION BY ad.murid_id, COALESCE(a.jenis_presensi, "reguler")) AS dobel
             ')
             ->join('absensi a', 'a.id = ad.absensi_id')
             ->join('murid m', 'm.id = ad.murid_id')
@@ -168,6 +174,7 @@ class AdminAbsensi extends BaseController
             $r['display_nama'] = !empty($r['panggilan'])
                 ? $r['panggilan'].' ('.$namaLengkap.')'
                 : $namaLengkap;
+            $r['nama_lokasi'] = formatLokasiDisplay($r['nama_lokasi'] ?? '-', $r['keterangan'] ?? null);
         }
         unset($r);
 
@@ -209,8 +216,10 @@ class AdminAbsensi extends BaseController
                 '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 k.nama_kelas,
                 a.jam,
+                COALESCE(a.jenis_presensi, "reguler") AS jenis_presensi,
+                a.keterangan,
                 a.lokasi_id,
-                li.nama_lokasi,
+                COALESCE(NULLIF(a.keterangan, ""), NULLIF(a.lokasi_text, ""), li.nama_lokasi) AS nama_lokasi,
                 u.nama_depan AS guru_depan,
                 u.nama_belakang AS guru_belakang
             ')
@@ -240,6 +249,7 @@ class AdminAbsensi extends BaseController
             $d['display_nama'] = !empty($d['panggilan'])
                 ? $d['panggilan'].' ('.$namaLengkap.')'
                 : $namaLengkap;
+            $d['nama_lokasi'] = formatLokasiDisplay($d['nama_lokasi'] ?? '-', $d['keterangan'] ?? null);
         }
         unset($d);
 
@@ -248,7 +258,8 @@ class AdminAbsensi extends BaseController
                 'judul'   => 'REKAP ABSENSI HARIAN',
                 'tanggal' => $tanggal,
                 'start'   => $tanggal,
-                'data'    => $data
+                'data'    => $data,
+                'mode'    => $jenis
             ]);
 
             $dompdf = new Dompdf(['isRemoteEnabled' => true]);
@@ -262,16 +273,7 @@ class AdminAbsensi extends BaseController
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=rekap_$tanggal.xls");
 
-        echo "Nama\tKelas\tUnity\tLokasi\tJam\tGuru\n";
-        foreach ($data as $d) {
-            echo
-                $d['display_nama']."\t".
-                ($d['nama_kelas'] ?? '-')."\t".
-                ($d['unity'] ?? '-')."\t".
-                ($d['nama_lokasi'] ?? '-')."\t".
-                ($d['jam'] ?? '-')."\t".
-                trim(($d['guru_depan'] ?? '').' '.($d['guru_belakang'] ?? ''))."\n";
-        }
+        $this->renderExcelRows($data, $jenis, $tanggal);
         exit;
     }
 
@@ -308,11 +310,15 @@ class AdminAbsensi extends BaseController
                 COUNT(DISTINCT a.guru_id) AS total_guru,
                 SUM(
                     CASE 
-                        WHEN ad.murid_id IN (
-                            SELECT murid_id
-                            FROM absensi_detail
-                            WHERE status != 'batal'
-                            GROUP BY murid_id, tanggal
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM absensi_detail d2
+                            JOIN absensi a2 ON a2.id = d2.absensi_id
+                            WHERE d2.status != 'batal'
+                              AND d2.murid_id = ad.murid_id
+                              AND d2.tanggal = a.tanggal
+                              AND COALESCE(a2.jenis_presensi, 'reguler') = COALESCE(a.jenis_presensi, 'reguler')
+                            GROUP BY d2.murid_id, d2.tanggal, COALESCE(a2.jenis_presensi, 'reguler')
                             HAVING COUNT(*) > 1
                         )
                         THEN 1 ELSE 0
@@ -386,7 +392,9 @@ class AdminAbsensi extends BaseController
                 m.panggilan,
                 '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 a.jam,
-                li.nama_lokasi,
+                COALESCE(a.jenis_presensi, "reguler") AS jenis_presensi,
+                a.keterangan,
+                COALESCE(NULLIF(a.keterangan, ""), NULLIF(a.lokasi_text, ""), li.nama_lokasi) AS nama_lokasi,
                 u.nama_depan AS guru_depan,
                 u.nama_belakang AS guru_belakang
             ')
@@ -428,6 +436,7 @@ class AdminAbsensi extends BaseController
             $r['display_nama'] = !empty($r['panggilan'])
                 ? $r['panggilan'].' ('.$namaLengkap.')'
                 : $namaLengkap;
+            $r['nama_lokasi'] = formatLokasiDisplay($r['nama_lokasi'] ?? '-', $r['keterangan'] ?? null);
         }
         unset($r);
 
@@ -452,5 +461,30 @@ class AdminAbsensi extends BaseController
         }
 
         return $value;
+    }
+
+    private function renderExcelRows(array $rows, string $mode, ?string $tanggal = null): void
+    {
+        if ($mode === 'all') {
+            echo "REGULER\n";
+            $this->renderExcelRows(array_values(array_filter($rows, static fn ($row) => (($row['jenis_presensi'] ?? 'reguler') === 'reguler'))), 'reguler', $tanggal);
+            echo "\nUNITY\n";
+            $this->renderExcelRows(array_values(array_filter($rows, static fn ($row) => (($row['jenis_presensi'] ?? 'reguler') === 'unity'))), 'unity', $tanggal);
+            return;
+        }
+
+        $guruLabel = $mode === 'unity' ? 'Mentor' : 'Guru';
+        echo "Tanggal\tNama\tKelas\tJam\tLokasi\t{$guruLabel}\n";
+
+        foreach ($rows as $row) {
+            $rowTanggal = $tanggal ?? ($row['tanggal'] ?? '-');
+            echo
+                $rowTanggal."\t".
+                ($row['display_nama'] ?? trim(($row['nama_depan'] ?? '').' '.($row['nama_belakang'] ?? '')))."\t".
+                ($row['nama_kelas'] ?? $row['kelas_id'] ?? '-')."\t".
+                ($row['jam'] ?? '-')."\t".
+                ($row['nama_lokasi'] ?? '-')."\t".
+                trim(($row['guru_depan'] ?? '').' '.($row['guru_belakang'] ?? ''))."\n";
+        }
     }
 }

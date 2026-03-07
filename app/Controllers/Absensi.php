@@ -16,48 +16,36 @@ class Absensi extends BaseController
 
     public function step1()
     {
-        $lokasiOptions = $this->db->table('lokasi_ibadah')
-            ->select('id, nama_lokasi')
-            ->orderBy('nama_lokasi', 'ASC')
-            ->get()->getResultArray();
+        $lokasiOptions = $this->fetchLokasiOptions(false);
 
         return view('guru/absensi_step1', [
             'kelasGroups' => kelasGroupMap(),
             'lokasiOptions' => $lokasiOptions,
-            'jamOptions' => [
-                '08:00:00' => '08:00 AM',
-                '10:00:00' => '10:00 AM',
-            ],
+            'currentTime' => date('H:i:s'),
         ]);
     }
 
     public function unityStep1()
     {
-        $lokasiOptions = $this->db->table('lokasi_ibadah')
-            ->select('id, nama_lokasi')
-            ->orderBy('nama_lokasi', 'ASC')
-            ->get()->getResultArray();
+        $lokasiOptions = $this->fetchLokasiOptions(true);
 
         return view('guru/unity_step1', [
             'kelasGroups' => kelasGroupMap(),
             'unityMap' => unityMetaMap(),
             'lokasiOptions' => $lokasiOptions,
-            'jamOptions' => [
-                '08:00:00' => '08:00 AM',
-                '10:00:00' => '10:00 AM',
-            ],
+            'currentTime' => date('H:i:s'),
         ]);
     }
 
     public function tampilkan()
     {
         $kelasGroups = (array) $this->request->getGet('kelas');
-        $lokasi = (int) $this->request->getGet('lokasi');
-        $jamPreset = trim((string) $this->request->getGet('jam_preset'));
-        $allowedJam = ['08:00:00', '10:00:00'];
+        $lokasiId = (int) $this->request->getGet('lokasi');
+        $jamPreset = $this->normalizeClockInput((string) $this->request->getGet('jam_input'));
+        $lokasi = $this->resolveLocationSelection($lokasiId, '', 'reguler');
 
-        if (empty($kelasGroups) || $lokasi <= 0 || !in_array($jamPreset, $allowedJam, true)) {
-            return redirect()->to('guru/absensi')->with('error', 'Kelas, lokasi, dan jadwal wajib dipilih.');
+        if (empty($kelasGroups) || $lokasi === null) {
+            return redirect()->to('guru/absensi')->with('error', 'Kelas dan lokasi wajib dipilih.');
         }
 
         $resolved = $this->resolveClassIdsByGroupKeys($kelasGroups);
@@ -68,7 +56,9 @@ class Absensi extends BaseController
         $murid = $this->fetchMuridAktif($resolved['classIds'], null);
 
         return view('guru/absensi_step2', [
-            'lokasi_id' => $lokasi,
+            'lokasi_id' => $lokasi['id'],
+            'lokasi_text' => $lokasi['display'],
+            'lokasi_custom' => $lokasi['note'] ?? '',
             'murid' => $murid,
             'kelasLabels' => $resolved['classLabels'],
             'saveAction' => base_url('guru/absensi/simpan'),
@@ -82,14 +72,15 @@ class Absensi extends BaseController
     public function unityTampilkan()
     {
         $unity = trim((string) $this->request->getGet('unity'));
-        $lokasi = (int) $this->request->getGet('lokasi');
+        $lokasiId = (int) $this->request->getGet('lokasi');
+        $lokasiCustom = $this->sanitizeCustomLocation((string) $this->request->getGet('lokasi_lainnya'));
         $kelasGroups = (array) $this->request->getGet('kelas');
         $hasUnity = $this->hasTableColumn('murid', 'unity');
-        $jamPreset = trim((string) $this->request->getGet('jam_preset'));
-        $allowedJam = ['08:00:00', '10:00:00'];
+        $jamPreset = $this->normalizeClockInput((string) $this->request->getGet('jam_input'));
+        $lokasi = $this->resolveLocationSelection($lokasiId, $lokasiCustom, 'unity');
 
-        if (!$hasUnity || $unity === '' || !isset(unityMetaMap()[$unity]) || $lokasi <= 0 || !in_array($jamPreset, $allowedJam, true)) {
-            return redirect()->to('guru/unity')->with('error', 'Unity, lokasi, dan jadwal wajib dipilih.');
+        if (!$hasUnity || $unity === '' || !isset(unityMetaMap()[$unity]) || $lokasi === null) {
+            return redirect()->to('guru/unity')->with('error', 'Unity dan lokasi wajib dipilih.');
         }
 
         $classIds = [];
@@ -110,7 +101,9 @@ class Absensi extends BaseController
         }
 
         return view('guru/absensi_step2', [
-            'lokasi_id' => $lokasi,
+            'lokasi_id' => $lokasi['id'],
+            'lokasi_text' => $lokasi['display'],
+            'lokasi_custom' => $lokasi['note'] ?? '',
             'murid' => $murid,
             'kelasLabels' => $classLabels,
             'saveAction' => base_url('guru/unity/simpan'),
@@ -144,12 +137,11 @@ class Absensi extends BaseController
         try {
             $jenisPresensi = in_array($jenisPresensi, ['reguler', 'unity'], true) ? $jenisPresensi : 'reguler';
             $tanggal = date('Y-m-d');
-            $jamInput = trim((string) $this->request->getPost('jam_preset'));
-            $allowedJam = ['08:00:00', '10:00:00'];
-            $jam = in_array($jamInput, $allowedJam, true) ? $jamInput : date('H:i:s');
+            $jam = $this->normalizeClockInput((string) ($this->request->getPost('jam_input') ?: $this->request->getPost('jam_preset')));
             $guruId = session('user_id');
             $guruNama = trim(session('nama_depan') . ' ' . session('nama_belakang'));
             $lokasiId = (int) $this->request->getPost('lokasi_id');
+            $lokasiCustom = $this->sanitizeCustomLocation((string) $this->request->getPost('lokasi_custom'));
             $murids = $this->request->getPost('hadir') ?? [];
 
             if (!$murids) {
@@ -158,11 +150,6 @@ class Absensi extends BaseController
                     'message' => 'Tidak ada murid dipilih',
                 ]);
             }
-
-            $lokasi = $this->db->table('lokasi_ibadah')
-                ->where('id', $lokasiId)
-                ->get()->getRowArray();
-            $lokasiText = $lokasi['nama_lokasi'] ?? '-';
 
             $selfie = $this->request->getFile('selfie');
             if (!$selfie || !$selfie->isValid()) {
@@ -187,10 +174,20 @@ class Absensi extends BaseController
 
             $this->db->transBegin();
 
+            $lokasi = $this->resolveLocationSelection($lokasiId, $lokasiCustom, $jenisPresensi);
+            if ($lokasi === null) {
+                $this->db->transRollback();
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Lokasi tidak valid',
+                ]);
+            }
+
             $this->db->table('absensi')->insert([
                 'guru_id' => $guruId,
-                'lokasi_id' => $lokasiId,
-                'lokasi_text' => $lokasiText,
+                'lokasi_id' => $lokasi['id'],
+                'lokasi_text' => $lokasi['text'],
+                'keterangan' => $lokasi['note'],
                 'jenis_presensi' => $jenisPresensi,
                 'tanggal' => $tanggal,
                 'jam' => $jam,
@@ -201,9 +198,11 @@ class Absensi extends BaseController
             $dobel = [];
 
             foreach ($murids as $muridId) {
-                $exist = $this->db->table('absensi_detail')
-                    ->where('murid_id', $muridId)
-                    ->where('tanggal', $tanggal)
+                $exist = $this->db->table('absensi_detail d')
+                    ->join('absensi a', 'a.id = d.absensi_id')
+                    ->where('d.murid_id', $muridId)
+                    ->where('d.tanggal', $tanggal)
+                    ->where('a.jenis_presensi', $jenisPresensi)
                     ->countAllResults() > 0;
 
                 $status = $exist ? 'dobel' : 'hadir';
@@ -233,7 +232,9 @@ class Absensi extends BaseController
                             m.nama_belakang,
                             k.nama_kelas,
                             {$unitySelect}
-                            a.lokasi_text,
+                            a.jenis_presensi,
+                            a.keterangan,
+                            COALESCE(NULLIF(a.keterangan, ''), a.lokasi_text) AS lokasi_text,
                             a.jam,
                             CONCAT(u.nama_depan,' ',u.nama_belakang) AS guru_pertama
                         ")
@@ -243,12 +244,15 @@ class Absensi extends BaseController
                         ->join('users u', 'u.id=a.guru_id')
                         ->where('d.murid_id', $muridId)
                         ->where('d.tanggal', $tanggal)
+                        ->where('a.jenis_presensi', $jenisPresensi)
                         ->orderBy('a.jam', 'ASC')
                         ->get()->getRowArray();
 
                     $dobel[] = [
                         'murid_id' => $muridId,
-                        'detail' => $first,
+                        'detail' => $first ? array_merge($first, [
+                            'lokasi_text' => formatLokasiDisplay($first['lokasi_text'] ?? '', $first['keterangan'] ?? null),
+                        ]) : $first,
                     ];
                 }
             }
@@ -276,12 +280,33 @@ class Absensi extends BaseController
 
     public function hariIni()
     {
+        return $this->renderHariIni('reguler', 'guru/absensi-hari-ini', 'guru/absensi-hari-ini/simpan', 'guru/absensi');
+    }
+
+    public function hariIniUnity()
+    {
+        return $this->renderHariIni('unity', 'guru/unity-hari-ini', 'guru/unity-hari-ini/simpan', 'guru/unity');
+    }
+
+    public function simpanEditHariIni()
+    {
+        return $this->handleSimpanEditHariIni('reguler', 'guru/absensi-hari-ini');
+    }
+
+    public function simpanEditHariIniUnity()
+    {
+        return $this->handleSimpanEditHariIni('unity', 'guru/unity-hari-ini');
+    }
+
+    private function renderHariIni(string $jenisPresensi, string $dayUrl, string $saveUrl, string $backUrl)
+    {
         $tanggal = date('Y-m-d');
         $guruId = session('user_id');
 
         $absensi = $this->db->table('absensi')
             ->where('guru_id', $guruId)
             ->where('tanggal', $tanggal)
+            ->where('jenis_presensi', $jenisPresensi)
             ->orderBy('jam', 'DESC')
             ->get()
             ->getRowArray();
@@ -290,6 +315,10 @@ class Absensi extends BaseController
             return view('guru/absensi_hari_ini', [
                 'absensi' => null,
                 'detail' => [],
+                'modeLabel' => ucfirst($jenisPresensi),
+                'saveUrl' => base_url($saveUrl),
+                'backUrl' => base_url($backUrl),
+                'dayUrl' => base_url($dayUrl),
             ]);
         }
 
@@ -329,10 +358,14 @@ class Absensi extends BaseController
             'detail' => $detail,
             'hadir' => $hadir,
             'dobel' => $dobel,
+            'modeLabel' => ucfirst($jenisPresensi),
+            'saveUrl' => base_url($saveUrl),
+            'backUrl' => base_url($backUrl),
+            'dayUrl' => base_url($dayUrl),
         ]);
     }
 
-    public function simpanEditHariIni()
+    private function handleSimpanEditHariIni(string $jenisPresensi, string $redirectPath)
     {
         $absensiId = (int) $this->request->getPost('absensi_id');
         $hadirRaw = $this->request->getPost('hadir');
@@ -350,6 +383,7 @@ class Absensi extends BaseController
             ->select('id')
             ->where('id', $absensiId)
             ->where('guru_id', $userId)
+            ->where('jenis_presensi', $jenisPresensi)
             ->get()
             ->getRowArray();
 
@@ -413,12 +447,12 @@ class Absensi extends BaseController
 
         if ($changed === 0) {
             return redirect()
-                ->to(base_url('guru/absensi-hari-ini'))
+                ->to(base_url($redirectPath))
                 ->with('error', 'Tidak ada perubahan status yang tersimpan');
         }
 
         return redirect()
-            ->to(base_url('guru/absensi-hari-ini'))
+            ->to(base_url($redirectPath))
             ->with('success', 'Perubahan absensi berhasil disimpan');
     }
 
@@ -501,5 +535,85 @@ class Absensi extends BaseController
         }
 
         return $labels;
+    }
+
+    private function sanitizeCustomLocation(string $value): string
+    {
+        $value = trim(strip_tags($value));
+        $value = preg_replace('/\s+/', ' ', $value) ?? '';
+        return trim($value);
+    }
+
+    private function normalizeClockInput(string $value): string
+    {
+        $value = trim($value);
+        if (preg_match('/^\d{2}:\d{2}$/', $value) === 1) {
+            return $value . ':00';
+        }
+
+        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value) === 1) {
+            return $value;
+        }
+
+        return date('H:i:s');
+    }
+
+    private function fetchLokasiOptions(bool $allowLainnya): array
+    {
+        $allowedNames = $allowLainnya
+            ? ['NICC', 'GRASA', 'CPM', 'Lokasi Lainnya']
+            : ['NICC', 'GRASA', 'CPM'];
+
+        return $this->db->table('lokasi_ibadah')
+            ->select('id, nama_lokasi')
+            ->whereIn('nama_lokasi', $allowedNames)
+            ->orderBy('id', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    private function resolveLocationSelection(int $lokasiId, string $lokasiCustom, string $jenisPresensi): ?array
+    {
+        if ($lokasiId <= 0) {
+            return null;
+        }
+
+        $row = $this->db->table('lokasi_ibadah')
+            ->select('id, nama_lokasi')
+            ->where('id', $lokasiId)
+            ->get()
+            ->getRowArray();
+
+        if (!$row) {
+            return null;
+        }
+
+        $name = (string) $row['nama_lokasi'];
+        if ($jenisPresensi === 'reguler' && !in_array($name, ['NICC', 'GRASA', 'CPM'], true)) {
+            return null;
+        }
+
+        if ($jenisPresensi === 'unity') {
+            $isLainnya = $name === 'Lokasi Lainnya';
+            if ($isLainnya && $lokasiCustom === '') {
+                return null;
+            }
+
+            return [
+                'id' => (int) $row['id'],
+                'text' => $name,
+                'note' => $isLainnya ? $lokasiCustom : null,
+                'display' => formatLokasiDisplay($name, $isLainnya ? $lokasiCustom : null),
+                'is_custom' => $isLainnya,
+            ];
+        }
+
+        return [
+            'id' => (int) $row['id'],
+            'text' => $name,
+            'note' => null,
+            'display' => formatLokasiDisplay($name),
+            'is_custom' => false,
+        ];
     }
 }

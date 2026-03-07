@@ -49,7 +49,9 @@ class AdminExport extends BaseController
                 '.($hasUnity ? 'm.unity' : "'' AS unity").',
                 k.nama_kelas,
                 a.jam,
-                li.nama_lokasi,
+                COALESCE(a.jenis_presensi, "reguler") AS jenis_presensi,
+                a.keterangan,
+                COALESCE(NULLIF(a.keterangan, ""), NULLIF(a.lokasi_text, ""), li.nama_lokasi) AS nama_lokasi,
                 u.nama_depan AS guru_depan,
                 u.nama_belakang AS guru_belakang
             ')
@@ -78,24 +80,38 @@ class AdminExport extends BaseController
         echo "Periode : $start s/d $end\n";
         echo "Jenis   : ".strtoupper($mode)."\n";
         echo "Dicetak : ".date('d M Y H:i')."\n\n";
-        echo "Tanggal\tNama\tKelas\tUnity\tJam\tLokasi\tGuru\n";
+        echo $this->renderExcelRows($rows, $mode);
+        exit;
+    }
+
+    private function renderExcelRows(array $rows, string $mode): string
+    {
+        if ($mode === 'all') {
+            return "REGULER\n"
+                .$this->renderExcelRows(array_values(array_filter($rows, static fn ($row) => (($row['jenis_presensi'] ?? 'reguler') === 'reguler'))), 'reguler')
+                ."\nUNITY\n"
+                .$this->renderExcelRows(array_values(array_filter($rows, static fn ($row) => (($row['jenis_presensi'] ?? 'reguler') === 'unity'))), 'unity');
+        }
+
+        $guruLabel = $mode === 'unity' ? 'Mentor' : 'Guru';
+        $output = "Tanggal\tNama\tKelas\tJam\tLokasi\t{$guruLabel}\n";
 
         foreach ($rows as $r) {
-
             $namaLengkap = trim($r['nama_depan'].' '.$r['nama_belakang']);
             $displayNama = !empty($r['panggilan'])
                 ? $r['panggilan'].' ('.$namaLengkap.')'
                 : $namaLengkap;
+            $namaLokasi = formatLokasiDisplay($r['nama_lokasi'] ?? '-', $r['keterangan'] ?? null);
 
-            echo
-                $r['tanggal']."\t".
+            $output .=
+                ($r['tanggal'] ?? '-')."\t".
                 $displayNama."\t".
                 ($r['nama_kelas'] ?? '-')."\t".
-                ($r['unity'] ?? '-')."\t".
                 ($r['jam'] ?? '-')."\t".
-                ($r['nama_lokasi'] ?? '-')."\t".
+                $namaLokasi."\t".
                 trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))."\n";
         }
-        exit;
+
+        return $output;
     }
 }

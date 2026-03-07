@@ -13,6 +13,7 @@ class AbsensiModel extends Model
         'guru_id',
         'lokasi_id',
         'lokasi_text',
+        'keterangan',
         'jenis_presensi',
         'tanggal',
         'jam',

@@ -7,16 +7,18 @@ $mapKelas = [
   4=>'1',5=>'2',6=>'3',
   7=>'4',8=>'5',9=>'6',11=>'TR'
 ];
-
+$modeAktif = $mode ?? 'all';
+$guruLabel = $modeAktif === 'all' ? 'PIC' : ($modeAktif === 'unity' ? 'Mentor' : 'Guru');
+$titleLabel = $modeAktif === 'all' ? 'Rekap Presensi Kelas' : 'Rekap '.ucfirst($modeAktif).' Kelas';
 $mapLokasi = [
-  1=>'NICC',2=>'GRASA',3=>'CPM',4=>'Online'
+  1=>'NICC',2=>'GRASA',3=>'CPM',9=>'Lokasi Lainnya'
 ];
 ?>
 
 <section class="content-header">
   <div class="container-fluid">
     <h1>
-      Rekap Presensi Kelas <?= esc($mapKelas[$kelas] ?? '-') ?>
+      <?= esc($titleLabel) ?> <?= esc($mapKelas[$kelas] ?? '-') ?>
     </h1>
     <p class="text-muted">
       Periode <?= esc($start) ?> s/d <?= esc($end) ?>
@@ -91,21 +93,27 @@ $mapLokasi = [
     <tr>
       <th>Tanggal</th>
       <th>Nama Siswa</th>
-      <th>Unity</th>
+      <th>Kelas</th>
+      <?php if ($modeAktif === 'all'): ?>
+        <th>Jenis</th>
+      <?php endif; ?>
       <th>Jam</th>
       <th>Lokasi</th>
-      <th>Guru</th>
+      <th><?= esc($guruLabel) ?></th>
     </tr>
   </thead>
   <tbody>
   <?php foreach ($rows as $r): ?>
     <tr>
       <td><?= esc($r['tanggal']) ?></td>
-      <td><?= esc($r['nama_depan'].' '.$r['nama_belakang']) ?></td>
-      <td><?= unityBadge($r['unity'] ?? '') ?> <?= esc($r['unity'] ?? '-') ?></td>
+      <td><?= esc($r['display_nama'] ?? ($r['nama_depan'].' '.$r['nama_belakang'])) ?></td>
+      <td><?= esc($mapKelas[$kelas] ?? '-') ?></td>
+      <?php if ($modeAktif === 'all'): ?>
+        <td><?= esc(ucfirst($r['jenis_presensi'] ?? 'reguler')) ?></td>
+      <?php endif; ?>
       <td><?= esc($r['jam']) ?></td>
       <td><?= esc($r['nama_lokasi'] ?? '-') ?></td>
-    <td><?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?></td>
+      <td><?= esc(trim(($r['guru_depan'] ?? '').' '.($r['guru_belakang'] ?? ''))) ?></td>
     </tr>
   <?php endforeach; ?>
   </tbody>

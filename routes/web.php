@@ -78,7 +78,7 @@ Route::prefix('dashboard/superadmin')->middleware(['auth', 'role:1'])->group(fun
     Route::get('/guru/create', [AdminGuru::class, 'create']);
     Route::post('/guru/store', [AdminGuru::class, 'store']);
     Route::get('/guru/detail/{id}', [AdminGuru::class, 'detail']);
-    Route::get('/guru/toggle/{id}', [AdminGuru::class, 'toggle']);
+    Route::post('/guru/toggle/{id}', [AdminGuru::class, 'toggle']);
     Route::post('/guru/delete/{id}', [AdminGuru::class, 'delete']);
 
     Route::get('/murid', [AdminMurid::class, 'index']);
@@ -111,9 +111,9 @@ Route::prefix('admin')->middleware(['auth', 'role:2', 'menuaccess'])->group(func
     Route::get('/guru/create', [AdminGuru::class, 'create']);
     Route::post('/guru/store', [AdminGuru::class, 'store']);
     Route::get('/guru/detail/{id}', [AdminGuru::class, 'detail']);
-    Route::get('/guru/toggle/{id}', [AdminGuru::class, 'toggle']);
+    Route::post('/guru/toggle/{id}', [AdminGuru::class, 'toggle']);
     Route::post('/guru/delete/{id}', [AdminGuru::class, 'delete']);
-    Route::get('/guru/toggle-role/{id}', [AdminGuru::class, 'toggleRole']);
+    Route::post('/guru/toggle-role/{id}', [AdminGuru::class, 'toggleRole']);
 
     Route::get('/rekap-absensi', [AdminAbsensi::class, 'index']);
     Route::get('/rekap-absensi/range', [AdminAbsensi::class, 'range']);
@@ -187,6 +187,8 @@ Route::prefix('guru')->middleware(['auth', 'role:3', 'menuaccess'])->group(funct
 
     Route::get('/absensi-hari-ini', [Absensi::class, 'hariIni']);
     Route::post('/absensi-hari-ini/simpan', [Absensi::class, 'simpanEditHariIni']);
+    Route::get('/unity-hari-ini', [Absensi::class, 'hariIniUnity']);
+    Route::post('/unity-hari-ini/simpan', [Absensi::class, 'simpanEditHariIniUnity']);
 
     Route::get('/murid', [GuruMurid::class, 'index']);
     Route::get('/murid/create', [GuruMurid::class, 'create']);
@@ -236,8 +238,8 @@ Route::prefix('superadmin')->middleware(['auth', 'role:1'])->group(function (): 
 
     Route::get('/system-log', [SystemLog::class, 'index']);
     Route::get('/system-control', [SystemControl::class, 'index']);
-    Route::get('/system-control/toggle-maintenance', [SystemControl::class, 'toggleMaintenance']);
-    Route::get('/system-control/toggle-absensi', [SystemControl::class, 'toggleAbsensi']);
+    Route::post('/system-control/toggle-maintenance', [SystemControl::class, 'toggleMaintenance']);
+    Route::post('/system-control/toggle-absensi', [SystemControl::class, 'toggleAbsensi']);
     Route::post('/system-control/toggle-menu/{menu}', [SystemControl::class, 'toggleMenu']);
     Route::get('/activity-log', [ActivityLog::class, 'index']);
 });

@@ -56,26 +56,46 @@ class SystemControl extends BaseController
 
     public function toggleMaintenance()
     {
+        if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+            return $this->response->setStatusCode(405);
+        }
+
         $new = isMaintenance() ? '0':'1';
         $this->setSetting('maintenance_mode',$new);
 
         systemLog('MAINTENANCE_TOGGLE','Maintenance mode changed','system');
+        logAudit('toggle_maintenance_mode', 'warning', [
+            'old' => ['maintenance_mode' => $new === '1' ? '0' : '1'],
+            'new' => ['maintenance_mode' => $new],
+        ]);
 
         return redirect()->back();
     }
 
     public function toggleAbsensi()
     {
+        if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+            return $this->response->setStatusCode(405);
+        }
+
         $new = isAbsensiLocked() ? '0':'1';
         $this->setSetting('absensi_lock',$new);
 
         systemLog('ABSENSI_LOCK','Absensi lock toggled','system');
+        logAudit('toggle_absensi_lock', 'warning', [
+            'old' => ['absensi_lock' => $new === '1' ? '0' : '1'],
+            'new' => ['absensi_lock' => $new],
+        ]);
 
         return redirect()->back();
     }
 
     public function toggleMenu(string $key)
     {
+        if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+            return $this->response->setStatusCode(405);
+        }
+
         $allowed = [
             'guru_absen',
             'guru_murid',
@@ -98,6 +118,11 @@ class SystemControl extends BaseController
         $statusText = $new === 1 ? 'ON' : 'OFF';
         systemLog('MENU_TOGGLE', 'Toggle '.$key.' -> '.$statusText, 'menu');
         logSuperadmin('toggle_menu', 'Toggle '.$key.' -> '.$statusText);
+        logAudit('toggle_menu_access', 'warning', [
+            'target' => $key,
+            'old' => [$key => $current],
+            'new' => [$key => $new],
+        ]);
 
         return redirect()->back()->with('success', 'Pengaturan menu diperbarui');
     }

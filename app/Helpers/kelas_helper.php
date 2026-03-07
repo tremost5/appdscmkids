@@ -18,6 +18,22 @@ if (!function_exists('kelasMap')) {
     }
 }
 
+if (!function_exists('formatLokasiDisplay')) {
+    function formatLokasiDisplay($lokasi, $keterangan = null)
+    {
+        $lokasi = trim((string) $lokasi);
+        $keterangan = trim((string) $keterangan);
+
+        if ($keterangan !== '') {
+            return $lokasi !== '' && strcasecmp($lokasi, 'Lokasi Lainnya') === 0
+                ? 'Lokasi Lainnya: ' . $keterangan
+                : $keterangan;
+        }
+
+        return $lokasi !== '' ? $lokasi : '-';
+    }
+}
+
 if (!function_exists('kelasGroupMap')) {
     function kelasGroupMap()
     {

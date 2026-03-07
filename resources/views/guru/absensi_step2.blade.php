@@ -30,9 +30,13 @@
   color:#fff;background:linear-gradient(90deg,#7c3aed,#ec4899)
 }
 .absensi-hero{background:linear-gradient(90deg,#7c3aed,#ec4899)!important;color:#fff!important;border-radius:14px}
+.absensi-hero > .mt-1{display:none!important}
 .btn-absensi-main{background:linear-gradient(90deg,#7c3aed,#ec4899)!important;border:none!important;color:#fff!important;font-weight:700}
 .btn-absensi-main:hover{filter:brightness(1.05)}
 body.murid-preview-open{overflow:hidden}
+.meta-badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.meta-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24)}
+.meta-badge.time{background:#fff;color:#6b21a8;font-weight:800;box-shadow:0 10px 24px rgba(0,0,0,.14)}
 </style>
 
 <div class="card mb-3 shadow-sm">
@@ -54,6 +58,7 @@ body.murid-preview-open{overflow:hidden}
       enctype="multipart/form-data">
 <?= csrf_field() ?>
 <input type="hidden" name="lokasi_id" value="<?= (int)$lokasi_id ?>">
+<input type="hidden" name="lokasi_custom" value="<?= esc($lokasi_custom ?? '') ?>">
 <input type="hidden" name="jam_preset" value="<?= esc($jamPreset ?? '') ?>">
 
 <div class="mb-3">
@@ -390,6 +395,38 @@ document.getElementById('formAbsensi').addEventListener('submit', function (e) {
     btn.disabled = false;
     btn.innerHTML = '💾 Simpan Presensi';
   });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const hero = document.querySelector('.absensi-hero');
+  if (!hero || hero.querySelector('[data-step2-meta="1"]')) return;
+
+  const lokasiText = @json($lokasi_text ?? '');
+  const jamPreset = @json(substr((string) ($jamPreset ?? ''), 0, 5));
+
+  const meta = document.createElement('div');
+  meta.className = 'meta-badges';
+  meta.dataset.step2Meta = '1';
+
+  if (lokasiText) {
+    const lokasi = document.createElement('span');
+    lokasi.className = 'meta-badge';
+    lokasi.innerHTML = 'Lokasi: <strong>' + lokasiText + '</strong>';
+    meta.appendChild(lokasi);
+  }
+
+  if (jamPreset) {
+    const jam = document.createElement('span');
+    jam.className = 'meta-badge time';
+    jam.innerHTML = 'Jam Presensi: <strong>' + jamPreset + '</strong>';
+    meta.appendChild(jam);
+  }
+
+  if (meta.children.length > 0) {
+    hero.appendChild(meta);
+  }
 });
 </script>
 

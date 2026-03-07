@@ -1,6 +1,8 @@
 <?php
 
 use Config\Database;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 if (!function_exists('waTemplateDefaults')) {
     function waTemplateDefaults(): array
@@ -18,16 +20,16 @@ if (!function_exists('waTemplateEnsureSchema')) {
     function waTemplateEnsureSchema(): void
     {
         $db = Database::connect();
-        $db->query("
-            CREATE TABLE IF NOT EXISTS wa_templates (
-                id INT(11) NOT NULL AUTO_INCREMENT,
-                template_key VARCHAR(120) NOT NULL,
-                template_text TEXT NOT NULL,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                PRIMARY KEY (id),
-                UNIQUE KEY uniq_template_key (template_key)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ");
+        if ($db->tableExists('wa_templates')) {
+            return;
+        }
+
+        Schema::create('wa_templates', function (Blueprint $table): void {
+            $table->increments('id');
+            $table->string('template_key', 120)->unique();
+            $table->text('template_text');
+            $table->dateTime('updated_at')->nullable();
+        });
     }
 }
 
@@ -35,20 +37,20 @@ if (!function_exists('waRecipientEnsureSchema')) {
     function waRecipientEnsureSchema(): void
     {
         $db = Database::connect();
-        $db->query("
-            CREATE TABLE IF NOT EXISTS wa_recipients (
-                id INT(11) NOT NULL AUTO_INCREMENT,
-                user_id INT(11) NOT NULL,
-                role_id INT(11) NOT NULL,
-                no_hp VARCHAR(25) NOT NULL,
-                is_active TINYINT(1) NOT NULL DEFAULT 1,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                PRIMARY KEY (id),
-                UNIQUE KEY uniq_wa_recipient_user (user_id),
-                KEY idx_wa_recipient_role_active (role_id, is_active)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ");
+        if ($db->tableExists('wa_recipients')) {
+            return;
+        }
+
+        Schema::create('wa_recipients', function (Blueprint $table): void {
+            $table->increments('id');
+            $table->integer('user_id');
+            $table->integer('role_id');
+            $table->string('no_hp', 25);
+            $table->boolean('is_active')->default(1);
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
+            $table->unique('user_id', 'uniq_wa_recipient_user');
+        });
     }
 }
 
