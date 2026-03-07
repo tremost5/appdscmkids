@@ -24,8 +24,8 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('<?= base_url('pwa/sw.js') ?>', {
-    scope: '<?= rtrim(base_url('pwa'), '/') . '/' ?>'
+  navigator.serviceWorker.register('<?= base_url('sw.js') ?>', {
+    scope: '<?= rtrim(base_url(), '/') . '/' ?>'
   });
 }
 </script>

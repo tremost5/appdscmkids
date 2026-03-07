@@ -259,8 +259,8 @@ if ($role == 2) { // ADMIN
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const swUrl = '<?= base_url('pwa/sw.js') ?>';
-    const swScope = '<?= rtrim(base_url('pwa'), '/') . '/' ?>';
+    const swUrl = '<?= base_url('sw.js') ?>';
+    const swScope = '<?= rtrim(base_url(), '/') . '/' ?>';
     navigator.serviceWorker.register(
       swUrl,
       { scope: swScope }

@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw-guru.js', { scope: '/' }).catch(() => {});
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
   }
 
   if (isStandalone) return;
