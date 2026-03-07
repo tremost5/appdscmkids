@@ -10,7 +10,9 @@ use App\Controllers\AdminFotoKegiatan;
 use App\Controllers\AdminGuru;
 use App\Controllers\AdminMateri;
 use App\Controllers\AdminNaikKelas;
+use App\Controllers\PwaPush;
 use App\Controllers\Superadmin\UserRole;
+use App\Services\PwaPushService;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -411,6 +413,66 @@ class AdminSecurityFlowsTest extends TestCase
         $this->assertStringContainsString("Tanggal\tNama\tKelas\tJam\tLokasi\tMentor", $unity);
     }
 
+    public function test_pwa_subscription_can_be_saved_for_logged_in_user(): void
+    {
+        $guru = $this->createUser(3, 'Guru Push');
+
+        $this->bindSession($this->sessionPayload($guru));
+        $this->bindRequest('POST', '/pwa/push/subscribe', [], [
+            'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'subscription' => [
+                'endpoint' => 'https://push.example.test/sub-1',
+                'keys' => [
+                    'p256dh' => 'public-key-1',
+                    'auth' => 'auth-key-1',
+                ],
+                'contentEncoding' => 'aes128gcm',
+            ],
+        ], JSON_UNESCAPED_SLASHES));
+
+        $response = (new PwaPush())->subscribe(app(PwaPushService::class));
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(1, DB::table('pwa_subscriptions')->count());
+        $this->assertSame('https://push.example.test/sub-1', DB::table('pwa_subscriptions')->value('endpoint'));
+    }
+
+    public function test_pwa_push_service_skips_sending_when_vapid_not_configured(): void
+    {
+        DB::table('pwa_subscriptions')->insert([
+            'user_id' => 1,
+            'role_id' => 3,
+            'endpoint' => 'https://push.example.test/sub-skip',
+            'public_key' => 'public-key-skip',
+            'auth_token' => 'auth-key-skip',
+            'content_encoding' => 'aes128gcm',
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        config([
+            'pwa_push.enabled' => true,
+            'pwa_push.public_key' => '',
+            'pwa_push.private_key' => '',
+            'pwa_push.subject' => 'mailto:test@example.com',
+            'pwa_push.target_role_ids' => [3],
+        ]);
+
+        $result = app(PwaPushService::class)->sendNewMateriNotification([
+            'id' => 99,
+            'judul' => 'Materi Push',
+            'kelas_id' => 1,
+            'nama_kelas' => 'PG',
+        ]);
+
+        $this->assertSame(['sent' => 0, 'failed' => 0, 'skipped' => 1], $result);
+        $this->assertSame(1, DB::table('pwa_subscriptions')->count());
+    }
+
     private function createUser(int $roleId, string $name): array
     {
         $slug = strtolower(str_replace(' ', '', $name)) . '_' . bin2hex(random_bytes(3));
@@ -446,7 +508,7 @@ class AdminSecurityFlowsTest extends TestCase
         session()->put($payload);
     }
 
-    private function bindRequest(string $method, string $uri, array $data = [], array $server = []): void
+    private function bindRequest(string $method, string $uri, array $data = [], array $server = [], ?string $content = null): void
     {
         $request = Request::create(
             $uri,
@@ -455,6 +517,8 @@ class AdminSecurityFlowsTest extends TestCase
             [],
             [],
             $server
+            ,
+            $content
         );
         $request->setLaravelSession(session()->driver());
         app()->instance('request', $request);
@@ -482,6 +546,7 @@ class AdminSecurityFlowsTest extends TestCase
         Schema::dropIfExists('audit_log');
         Schema::dropIfExists('guru_kegiatan');
         Schema::dropIfExists('kelas_history');
+        Schema::dropIfExists('pwa_subscriptions');
         Schema::dropIfExists('system_settings');
         Schema::dropIfExists('wa_recipients');
         Schema::dropIfExists('wa_templates');
@@ -620,6 +685,22 @@ class AdminSecurityFlowsTest extends TestCase
             $table->integer('executed_by')->nullable();
             $table->text('snapshot')->nullable();
             $table->boolean('is_locked')->default(0);
+        });
+
+        Schema::create('pwa_subscriptions', function (Blueprint $table): void {
+            $table->increments('id');
+            $table->integer('user_id');
+            $table->integer('role_id');
+            $table->text('endpoint');
+            $table->text('public_key');
+            $table->text('auth_token');
+            $table->string('content_encoding', 30)->default('aes128gcm');
+            $table->string('user_agent', 255)->nullable();
+            $table->string('device_label', 120)->nullable();
+            $table->boolean('is_active')->default(1);
+            $table->dateTime('last_seen_at')->nullable();
+            $table->dateTime('created_at')->nullable();
+            $table->dateTime('updated_at')->nullable();
         });
 
         Schema::create('wa_templates', function (Blueprint $table): void {

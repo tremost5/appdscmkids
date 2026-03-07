@@ -308,6 +308,7 @@ window.addEventListener('beforeunload', ()=>{
 </script>
 <!-- di layouts/adminlte.php -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<?= view('partials/pwa_push') ?>
 
 </body>
 </html>

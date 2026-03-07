@@ -76,6 +76,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<?= view('partials/pwa_push') ?>
 
 </body>
 </html>

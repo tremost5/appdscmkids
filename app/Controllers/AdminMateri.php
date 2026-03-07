@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Services\PwaPushService;
+
 class AdminMateri extends BaseController
 {
     protected $db;
@@ -94,6 +96,9 @@ public function fetch()
             'link'       => $payload['link'],
             'created_at' => date('Y-m-d H:i:s')
         ]);
+
+        $materiId = (int) $this->db->insertID();
+        $this->dispatchPushNotification($materiId);
 
         return $this->response->setJSON(['status'=>'ok']);
     }
@@ -263,6 +268,26 @@ public function fetch()
         $path = FCPATH.'uploads/materi/'.basename($filename);
         if (is_file($path)) {
             @unlink($path);
+        }
+    }
+
+    private function dispatchPushNotification(int $materiId): void
+    {
+        try {
+            $materi = $this->db->table('materi_ajar m')
+                ->select('m.id, m.judul, m.kelas_id, k.nama_kelas')
+                ->join('kelas k', 'k.id = m.kelas_id', 'left')
+                ->where('m.id', $materiId)
+                ->get()
+                ->getRowArray();
+
+            if (!$materi) {
+                return;
+            }
+
+            app(PwaPushService::class)->sendNewMateriNotification($materi);
+        } catch (\Throwable $e) {
+            log_message('error', 'Dispatch push materi gagal: {message}', ['message' => $e->getMessage()]);
         }
     }
 }

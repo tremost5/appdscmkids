@@ -118,3 +118,42 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(networkFirst(request, OFFLINE_URL));
 });
+
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (error) {
+    payload = { title: 'Dscmkids App', body: event.data ? event.data.text() : 'Ada notifikasi baru.' };
+  }
+
+  const title = payload.title || 'Dscmkids App';
+  const options = {
+    body: payload.body || 'Ada informasi baru.',
+    icon: payload.icon || '/pwa/icons/icon-192.png',
+    badge: payload.badge || '/pwa/icons/icon-192.png',
+    tag: payload.tag || 'dscmkids-default',
+    data: payload.data || { url: payload.url || '/dashboard' },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/dashboard';
+
+  event.waitUntil((async () => {
+    const clientsList = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of clientsList) {
+      if ('focus' in client) {
+        client.navigate(targetUrl);
+        return client.focus();
+      }
+    }
+
+    if (clients.openWindow) {
+      return clients.openWindow(targetUrl);
+    }
+  })());
+});

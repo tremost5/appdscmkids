@@ -19,6 +19,7 @@ use App\Controllers\GuruMateri;
 use App\Controllers\GuruMurid;
 use App\Controllers\Home;
 use App\Controllers\Offline;
+use App\Controllers\PwaPush;
 use App\Controllers\Admin\AuditLog;
 use App\Controllers\Admin\Profil as AdminProfil;
 use App\Controllers\Admin\RankingMurid;
@@ -68,6 +69,12 @@ Route::middleware('auth')->prefix('dashboard')->group(function (): void {
     Route::get('/superadmin', [Dashboard::class, 'superadmin'])->middleware('role:1');
     Route::get('/admin', [Dashboard::class, 'admin'])->middleware('role:2');
     Route::get('/guru', [Dashboard::class, 'guru'])->middleware('role:3');
+});
+
+Route::prefix('pwa')->middleware('auth')->group(function (): void {
+    Route::get('/push/config', [PwaPush::class, 'config']);
+    Route::post('/push/subscribe', [PwaPush::class, 'subscribe']);
+    Route::post('/push/unsubscribe', [PwaPush::class, 'unsubscribe']);
 });
 
 Route::prefix('dashboard/superadmin')->middleware(['auth', 'role:1'])->group(function (): void {
