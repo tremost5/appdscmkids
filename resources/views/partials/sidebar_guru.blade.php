@@ -36,12 +36,6 @@ $unityGroupOpen = in_array($uri, ['guru/unity', 'guru/unity-hari-ini'], true);
   </a>
   <ul class="nav nav-treeview">
     <li class="nav-item">
-      <a href="<?= base_url('guru/absensi') ?>" class="nav-link <?= $uri=='guru/absensi'?'active':'' ?>">
-        <i class="far fa-circle nav-icon"></i>
-        <p>Presensi</p>
-      </a>
-    </li>
-    <li class="nav-item">
       <a href="<?= base_url('guru/absensi-hari-ini') ?>" class="nav-link <?= $uri=='guru/absensi-hari-ini'?'active':'' ?>">
         <i class="far fa-circle nav-icon"></i>
         <p>Presensi Hari Ini</p>
@@ -61,12 +55,6 @@ $unityGroupOpen = in_array($uri, ['guru/unity', 'guru/unity-hari-ini'], true);
     </p>
   </a>
   <ul class="nav nav-treeview">
-    <li class="nav-item">
-      <a href="<?= base_url('guru/unity') ?>" class="nav-link <?= $uri=='guru/unity'?'active':'' ?>">
-        <i class="far fa-circle nav-icon"></i>
-        <p>Presensi Unity</p>
-      </a>
-    </li>
     <li class="nav-item">
       <a href="<?= base_url('guru/unity-hari-ini') ?>" class="nav-link <?= $uri=='guru/unity-hari-ini'?'active':'' ?>">
         <i class="far fa-circle nav-icon"></i>
