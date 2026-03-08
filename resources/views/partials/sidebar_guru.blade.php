@@ -8,8 +8,6 @@ $canMateri  = $isSuperadmin || (int) setting('guru_materi', 1) === 1;
 $canKegiatan = $isSuperadmin || (int) setting('guru_kegiatan', 1) === 1;
 
 $uri = uri_string();
-$presensiGroupOpen = in_array($uri, ['guru/absensi', 'guru/absensi-hari-ini'], true);
-$unityGroupOpen = in_array($uri, ['guru/unity', 'guru/unity-hari-ini'], true);
 ?>
 
 <nav class="mt-2 sidebar-premium">
@@ -26,42 +24,20 @@ $unityGroupOpen = in_array($uri, ['guru/unity', 'guru/unity-hari-ini'], true);
 </li>
 
 <?php if ($canAbsensi): ?>
-<li class="nav-item has-treeview <?= $presensiGroupOpen ? 'menu-open' : '' ?>">
-  <a href="#" class="nav-link <?= $presensiGroupOpen ? 'active' : '' ?>">
+<li class="nav-item">
+  <a href="<?= base_url('guru/absensi-hari-ini') ?>" class="nav-link <?= $uri=='guru/absensi-hari-ini'?'active':'' ?>">
     <i class="nav-icon fas fa-clipboard-check"></i>
-    <p>
-      Presensi
-      <i class="right fas fa-angle-left"></i>
-    </p>
+    <p>Presensi Hari Ini</p>
   </a>
-  <ul class="nav nav-treeview">
-    <li class="nav-item">
-      <a href="<?= base_url('guru/absensi-hari-ini') ?>" class="nav-link <?= $uri=='guru/absensi-hari-ini'?'active':'' ?>">
-        <i class="far fa-circle nav-icon"></i>
-        <p>Presensi Hari Ini</p>
-      </a>
-    </li>
-  </ul>
 </li>
 <?php endif; ?>
 
 <?php if ($canAbsensi): ?>
-<li class="nav-item has-treeview <?= $unityGroupOpen ? 'menu-open' : '' ?>">
-  <a href="#" class="nav-link <?= $unityGroupOpen ? 'active' : '' ?>">
+<li class="nav-item">
+  <a href="<?= base_url('guru/unity-hari-ini') ?>" class="nav-link <?= $uri=='guru/unity-hari-ini'?'active':'' ?>">
     <i class="nav-icon fas fa-star"></i>
-    <p>
-      Unity
-      <i class="right fas fa-angle-left"></i>
-    </p>
+    <p>Unity Hari Ini</p>
   </a>
-  <ul class="nav nav-treeview">
-    <li class="nav-item">
-      <a href="<?= base_url('guru/unity-hari-ini') ?>" class="nav-link <?= $uri=='guru/unity-hari-ini'?'active':'' ?>">
-        <i class="far fa-circle nav-icon"></i>
-        <p>Unity Hari Ini</p>
-      </a>
-    </li>
-  </ul>
 </li>
 <?php endif; ?>
 
