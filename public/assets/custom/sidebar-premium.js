@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-sidebar .nav-link').forEach((link) => {
     link.addEventListener('click', () => {
       if (!isMobile()) return;
+      const href = (link.getAttribute('href') || '').trim();
+      const isTreeToggle = href === '#' || !!link.nextElementSibling || link.parentElement?.classList.contains('has-treeview');
+      if (isTreeToggle) return;
       body.classList.remove('sidebar-open');
       body.classList.add('sidebar-collapse');
       clearSidebarOverlay();
