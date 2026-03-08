@@ -47,19 +47,18 @@ if ($canAdminGuru) {
     $hasCreatedAt = in_array('created_at', $fields, true);
     $todayStart = date('Y-m-d 00:00:00');
 
-    $select = "SUM(CASE WHEN status = 'nonaktif' THEN 1 ELSE 0 END) AS guru_nonaktif";
+    $guruNonaktifCount = (int) $db->table('users')
+      ->where('role_id', 3)
+      ->where('status', 'nonaktif')
+      ->countAllResults();
+
     if ($hasCreatedAt) {
-      $select .= ", SUM(CASE WHEN created_at >= " . $db->escape($todayStart) . " THEN 1 ELSE 0 END) AS guru_baru";
+      $guruBaruDaftarCount = (int) $db->table('users')
+        ->where('role_id', 3)
+        ->where('created_at >=', $todayStart)
+        ->countAllResults();
     }
 
-    $row = $db->table('users')
-      ->select($select, false)
-      ->where('role_id', 3)
-      ->get()
-      ->getRowArray();
-
-    $guruNonaktifCount = (int) ($row['guru_nonaktif'] ?? 0);
-    $guruBaruDaftarCount = $hasCreatedAt ? (int) ($row['guru_baru'] ?? 0) : 0;
     $guruAlertCount = $guruNonaktifCount + $guruBaruDaftarCount;
   } catch (\Throwable $e) {
     $guruNonaktifCount = 0;
