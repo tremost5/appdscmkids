@@ -215,14 +215,16 @@ class Absensi extends BaseController
                 ]);
                 $absensiDetailId = (int) $this->db->insertID();
 
-                $this->db->table('absensi_log')->insert([
-                    'absensi_detail_id' => $absensiDetailId,
-                    'murid_id' => (int) $muridId,
-                    'aksi' => 'create',
-                    'status_baru' => $status,
-                    'oleh' => 'guru',
-                    'user_id' => $guruId,
-                ]);
+                if ($this->db->tableExists('absensi_log')) {
+                    $this->db->table('absensi_log')->insert([
+                        'absensi_detail_id' => $absensiDetailId,
+                        'murid_id' => (int) $muridId,
+                        'aksi' => 'create',
+                        'status_baru' => $status,
+                        'oleh' => 'guru',
+                        'user_id' => $guruId,
+                    ]);
+                }
 
                 if ($status === 'dobel') {
                     $unitySelect = $this->hasTableColumn('murid', 'unity') ? 'm.unity,' : "'' AS unity,";
