@@ -80,7 +80,7 @@ public function fetch()
         }
 
         $namaFile = $this->storeMateriFile($payload['file'], $payload['kategori']);
-        if ($payload['file'] && $payload['file']->getError() !== UPLOAD_ERR_NO_FILE && $namaFile === null) {
+        if ($this->hasUploadedMateriFile($payload['file']) && $namaFile === null) {
             return $this->response->setJSON([
                 'status' => 'error',
                 'message' => 'File upload gagal disimpan',
@@ -182,6 +182,7 @@ public function fetch()
         $kategori = strtolower(trim((string) ($this->request->getPost('kategori') ?? '')));
         $link = trim((string) ($this->request->getPost('link') ?? ''));
         $file = $this->request->getFile('file');
+        $hasUploadedFile = $this->hasUploadedMateriFile($file);
 
         if ($judul === '') {
             return ['error' => true, 'message' => 'Judul wajib diisi'];
@@ -198,17 +199,17 @@ public function fetch()
                 return ['error' => true, 'message' => 'Link wajib valid untuk kategori link'];
             }
         } else {
-            $requiresFile = !$isUpdate || ($file && $file->getError() !== UPLOAD_ERR_NO_FILE);
-            if ($requiresFile && (!$file || !$file->isValid())) {
+            $requiresFile = !$isUpdate || $hasUploadedFile;
+            if ($requiresFile && (!$hasUploadedFile || !$file || !$file->isValid())) {
                 return ['error' => true, 'message' => 'File wajib diunggah dan valid'];
             }
-            if ($file && $file->isValid() && !$this->isAllowedMateriFile($file, $kategori)) {
+            if ($hasUploadedFile && $file && $file->isValid() && !$this->isAllowedMateriFile($file, $kategori)) {
                 return ['error' => true, 'message' => 'Tipe file tidak sesuai kategori'];
             }
             $link = '';
         }
 
-        if ($file && !$file->isValid() && $file->getError() !== UPLOAD_ERR_NO_FILE) {
+        if ($hasUploadedFile && $file && !$file->isValid()) {
             return ['error' => true, 'message' => 'File upload tidak valid'];
         }
 
@@ -226,7 +227,7 @@ public function fetch()
     private function isAllowedMateriFile($file, string $kategori): bool
     {
         $ext = strtolower((string) $file->getExtension());
-        $mime = strtolower((string) $file->getMimeType());
+        $mime = $this->detectMateriMimeType($file);
 
         if ($kategori === 'pdf') {
             return $ext === 'pdf' || str_contains($mime, 'pdf');
@@ -238,6 +239,34 @@ public function fetch()
         }
 
         return false;
+    }
+
+    private function hasUploadedMateriFile($file): bool
+    {
+        if (!$file) {
+            return false;
+        }
+
+        return trim((string) $file->getClientName()) !== '' || trim((string) $file->getTempName()) !== '';
+    }
+
+    private function detectMateriMimeType($file): string
+    {
+        $tempPath = $file->getTempName();
+        if (!$tempPath || !is_file($tempPath)) {
+            return '';
+        }
+
+        if (function_exists('finfo_open')) {
+            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $mime = (string) @finfo_file($finfo, $tempPath);
+                @finfo_close($finfo);
+                return strtolower($mime);
+            }
+        }
+
+        return '';
     }
 
     private function storeMateriFile($file, string $kategori): ?string
